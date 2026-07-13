@@ -42,9 +42,10 @@ You can bootstrap and harden any target workspace prior to coding using either a
 ### Option A: Remote Installer (Zero-Clone, Recommended)
 Inside the root of the target project workspace you want to configure, run this single-line command:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/carlosmscabral/antigravity-okf-customizations/main/install.py | python3
+curl -fsSL https://raw.githubusercontent.com/carlosmscabral/antigravity-okf-customizations/main/install.sh | bash
 ```
-*This downloads all necessary DHC agent prompts, plugin assets, rules, scripts, and hooks directly from GitHub Raw and marks script gates as executable.*
+*This downloads the latest main zip archive, unpacks all customization folders dynamically, and recursively copies them to `.agents/` without hardcoding any file names.*
+
 
 ### Option B: Local Bootstrap (From Clone)
 If you have cloned this optimizations repository locally, run the bootstrap installer pointing to its path:
