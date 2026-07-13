@@ -85,6 +85,8 @@ When scanning, you must check for indicators of these specialized GCP and agent-
     *   *Trigger*: Detection of `google-genai`, ADK imports, or `agent` definitions in Python/JS.
     *   *Source Repo*: `https://github.com/google/agents-cli`
     *   *Action*: Suggest cloning the CLI guides, validation rules, and templates from the ADK repository to build and test ADK-native agents.
+    *   *Coding Agent Hint*: When creating or configuring an ADK agent, explicitly add a guideline inside the generated root `AGENTS.md` instructing the coding agent to **look for, clone, and model similar implementations inside the official Google ADK Samples repository at:** `https://github.com/google/adk-samples/tree/main/python` (this serves as a premium, highly practical design template for writing ADK agent code).
+
 *   **GE CX / Agent Studio (Dialogflow CX) Development**:
     *   *Trigger*: Detection of Dialogflow, Agent Studio, CX integrations, or `scrapi` references.
     *   *Source Repo*: `https://github.com/GoogleCloudPlatform/cxas-scrapi`
