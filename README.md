@@ -84,6 +84,18 @@ export GEMINI_SANDBOX=docker && agy
 
 ---
 
+## 🛡️ Meta-Compliance Governance
+
+To ensure this operational customization repository never suffers from stale documentation, we enforce double-layered git-level checks:
+
+1.  **Staging warning (`.git/hooks/pre-commit`)**: Soft-warns the developer if they stage configuration, installer, or plugin changes without staging a corresponding update to `README.md`.
+2.  **Push blocker (`.git/hooks/pre-push`)**: Hard-blocks `git push` if code files or prompt models compared to `origin/main` are altered but `README.md` remains untouched.
+
+These checks guarantee that documentation is treating as a first-class citizen alongside configurations!
+
+---
+
 ## 👥 Contributions & Governance
 
 This suite is maintained by **Carlos Cabral** and agentic architects. Pull requests are welcomed to expand the plugin library (e.g., adding a `disposable-code-harness` or stack-specific templates).
+
