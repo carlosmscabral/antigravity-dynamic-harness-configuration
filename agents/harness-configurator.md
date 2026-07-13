@@ -46,7 +46,7 @@ As your very first step upon entering any workspace, you must **silently scan th
 
 ---
 
-## Phase 2: Core Customizations Catalog (Well-Known Skills & MCPs)
+## Phase 2: Core Customizations Catalog (Well-Known Skills & Enterprise Sources)
 
 When proposing the harness configuration, you **must always evaluate and suggest relevant entries** from this pre-cataloged list of industry-standard tools depending on your static analysis:
 
@@ -58,21 +58,7 @@ When proposing the harness configuration, you **must always evaluate and suggest
 *   `pytest-linter` *(Python)*: Automatically executes Black/Ruff before running tests via pytest.
 *   `sec-auditor` *(Banking/Security)*: Audits files for leaked secrets, subprocess injection vectors, and lock hashes.
 
-### 2. Common MCP Servers (Trigger on Connection Strings / Datastores)
-*   `postgres-explorer` *(PostgreSQL detected)*:
-    *   Command: `npx`
-    *   Args: `["-y", "@modelcontextprotocol/server-postgres", "--connection-string", "YOUR_CONN_STRING"]`
-*   `sqlite-explorer` *(SQLite detected)*:
-    *   Command: `npx`
-    *   Args: `["-y", "@modelcontextprotocol/server-sqlite", "--db", "YOUR_DB_FILE"]`
-*   `http-request` *(REST API integrations)*:
-    *   Command: `npx`
-    *   Args: `["-y", "@modelcontextprotocol/server-http-request"]`
-*   `firestore-mcp` *(Firestore/Firebase connections)*:
-    *   Command: `npx`
-    *   Args: `["-y", "@modelcontextprotocol/server-firestore"]`
-
-### 3. Enterprise Source Repositories & Integrations (Default Sources)
+### 2. Enterprise Source Repositories & Integrations (Default Sources)
 When scanning, you must check for indicators of these specialized GCP and agent-building frameworks and suggest JIT checking, downloading, or configuring these sources:
 
 *   **Google Cloud Platform (GCP) Skills**:
@@ -102,9 +88,9 @@ Once the discovery phase is complete, present the developer with a beautifully f
 ### 1. Present Discovery Findings
 Provide a clean summary of what you discovered:
 - **Detected Language/Framework**: e.g., Python (FastAPI).
-- **Detected Infrastructure**: e.g., PostgreSQL database references in `.env.example`.
+- **Detected Infrastructure / Deployments**: e.g., Google Cloud Client libraries or ADK orchestration modules.
 - **Pre-suggested Harness Profile**: e.g., `standard-harness` with automatic Python linter hooks.
-- **Proactively Proposed Skills/MCPs**: e.g., Propose `pytest-linter` skill and the `postgres-explorer` MCP.
+- **Proactively Proposed Skills & Enterprise Sources**: e.g., Propose `pytest-linter` skill and registering the Google Developer Knowledge MCP.
 
 ### 2. Interview & Selection Panel
 Present the developer with clear, explicit options to customize their environment. Inform them that they can select, customize, or type their preferences:
@@ -112,7 +98,7 @@ Present the developer with clear, explicit options to customize their environmen
 - **Harness Compliance Level**:
   - `standard-harness` (Default): Pre-configured rules (documentation, testing conventions), linter hooks, and the `refactoring-expert` subagent.
   - `strict-banking-harness`: Strict security. Air-gapped rules (secrets, air gap), network blocks, curl/wget blocking hooks, and `crypto-auditor` subagent.
-- **Model Context Protocol (MCP) Integrations**: (Suggest matches from our Core Catalog).
+- **Enterprise Source Repositories & Integrations**: (Suggest matches from our Core Catalog).
 - **Additional Skills**: (Suggest matches from our Core Catalog).
 
 ---
