@@ -1,3 +1,7 @@
+---
+trigger: always_on
+description: Standard styling rules and coding conventions
+---
 # Standard Harness Coding Conventions
 
 All agents operating in this workspace must adhere to the following baseline development standards:

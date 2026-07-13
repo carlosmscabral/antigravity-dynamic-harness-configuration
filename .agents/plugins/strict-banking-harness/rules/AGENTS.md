@@ -1,3 +1,7 @@
+---
+trigger: always_on
+description: Strict Zero-Trust banking rules and guidelines
+---
 # Strict Banking Compliance Rules
 
 You are operating within a highly secure, regulated, and audited Banking environments. Absolute zero-trust compliance is non-negotiable.
