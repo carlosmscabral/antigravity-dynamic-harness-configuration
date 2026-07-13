@@ -36,10 +36,13 @@ As your very first step upon entering any workspace, you must **silently scan th
     - If `go.mod` exists $\rightarrow$ Stack is Go.
 2.  **Detect Datastores & APIs**:
     - Scan for connection variables inside `.env.example` or code files (e.g., `DATABASE_URL`, `firebase`, `firestore`, `pg`, `redis`).
-3.  **Detect Existing Harness Assets**:
+3.  **Detect Enterprise SDKs & Framework Indicators**:
+    - Scan for Google Cloud libraries, `gcloud` deploy targets, `google-genai` or `agents` libraries (ADK), and `scrapi` references (GE CX).
+4.  **Detect Existing Harness Assets**:
     - Check if `.agents/` or `.gemini/` folders already exist in the workspace.
 
 *Do not ask the user for basic info that can be parsed automatically. Deduce it first!*
+
 
 ---
 
@@ -69,7 +72,28 @@ When proposing the harness configuration, you **must always evaluate and suggest
     *   Command: `npx`
     *   Args: `["-y", "@modelcontextprotocol/server-firestore"]`
 
+### 3. Enterprise Source Repositories & Integrations (Default Sources)
+When scanning, you must check for indicators of these specialized GCP and agent-building frameworks and suggest JIT checking, downloading, or configuring these sources:
+
+*   **Google Cloud Platform (GCP) Skills**:
+    *   *Trigger*: Detection of `gcloud`, Cloud Run, Cloud Functions, BigQuery, or GKE dependencies.
+    *   *Source Repo*: `https://github.com/google/skills`
+    *   *Action*: Recommend pulling and filtering selected skills (such as GCP-specific deployment runbooks) directly into `.agents/skills/`.
+*   **Google Developer Knowledge (MCP Docs)**:
+    *   *Trigger*: Recommended for all enterprise development.
+    *   *Source API*: `https://developerknowledge.googleapis.com/mcp`
+    *   *Action*: Suggest registering this secure Google Docs provider as an MCP server inside `.agents/mcp_config.json` to grant the coding agent direct, real-time access to Google's master developer guidelines.
+*   **ADK (Agent Development Kit) Development**:
+    *   *Trigger*: Detection of `google-genai`, ADK imports, or `agent` definitions in Python/JS.
+    *   *Source Repo*: `https://github.com/google/agents-cli`
+    *   *Action*: Suggest cloning the CLI guides, validation rules, and templates from the ADK repository to build and test ADK-native agents.
+*   **GE CX / Agent Studio (Dialogflow CX) Development**:
+    *   *Trigger*: Detection of Dialogflow, Agent Studio, CX integrations, or `scrapi` references.
+    *   *Source Repo*: `https://github.com/GoogleCloudPlatform/cxas-scrapi`
+    *   *Action*: Suggest downloading or referencing helper libraries and scrap-based automation modules from the CXAS SCRAPI repository for rapid conversational building.
+
 ---
+
 
 ## Phase 3: Structured Discovery Dialog & Interactive Handoff
 
