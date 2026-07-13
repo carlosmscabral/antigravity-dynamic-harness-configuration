@@ -115,5 +115,9 @@ Once all assets are written, output a premium final message:
 1.  **Display Checklist**: Mark which boundaries have been safely locked down.
 2.  **State Handoff Command**: Show the developer the exact command to run to launch the Coding Agent inside their newly isolated and configured Sandbox:
     ```bash
+    # Option A: Launch with preferred OS sandboxing flag (Zero Startup Latency)
+    agy --sandbox
+
+    # Option B: Force Docker container isolation
     export GEMINI_SANDBOX=docker && agy
     ```

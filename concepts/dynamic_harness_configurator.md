@@ -54,12 +54,15 @@ By separating the setup into **Harness Provisioning** and **Code Implementation*
 When designing an operational DHC, we must adhere strictly to the security model of the external Antigravity CLI:
 
 1.  **No Workspace `settings.json`**: To prevent malicious repositories from silently hijacking developer environments, the CLI **completely ignores** local workspace settings (e.g., `.agents/settings.json` or `.gemini/settings.json`). 
-2.  **Global Sandbox Control**: Sandboxing levels (`enableTerminalSandbox`) are governed exclusively in the user's home directory (`~/.gemini/antigravity-cli/settings.json`) or via shell environment variables (`export GEMINI_SANDBOX=docker`).
+2.  **Global Sandbox Control & Enforcement**: Sandboxing is governed globally via `~/.gemini/antigravity-cli/settings.json` (using `"enableTerminalSandbox": true` and `"toolPermission": "proceed-in-sandbox"`) or can be dynamically forced at launch using either:
+    *   **CLI Launcher Flags**: `agy --sandbox` or `agy -s` (preferred, zero friction).
+    *   **Environment Variables**: `export GEMINI_SANDBOX=true` (or specify backend like `docker`, `sandbox-exec` for macOS, `nsjail` for Linux).
 3.  **Local Workspace-Level Gates**: While global sandboxing is host-governed, the DHC agent dynamically manages workspace-level tool boundaries by generating:
     *   `.agents/hooks.json`: Intercepting, linter-enforcing, or command-blocking gates (e.g., blocking `curl`/`wget`).
-    *   `.agents/AGENTS.md`: Cumulative repository rules and tech-stack conventions.
+    *   `AGENTS.md` (Workspace Root): Defining cumulative repository rules and tech-stack conventions.
     *   `.agents/plugins/`: Swapping whole compliance profiles (e.g., standard vs strict-banking).
     *   `.antigravityignore`: Masking virtual envs, API credentials, and databases.
+
 
 ---
 

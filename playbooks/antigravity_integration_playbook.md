@@ -35,19 +35,32 @@ Configure your global or project-level settings in **`~/.gemini/antigravity-cli/
 *   `allowNonWorkspaceAccess: false` blocks the agent from reading or writing files outside the active workspace directory (protecting SSH keys, application data, and internal configurations).
 *   `toolPermission: "request-review"` enforces an interactive verification step. The agent must explicitly request permission for tool execution, preventing automated silent execution.
 
-### II. Enabling Process Isolation (Docker & gVisor Sandbox)
-To prevent agents from executing malicious or destructive shell scripts natively on your host OS:
-1.  **Configure environment**: Run the following in your terminal session before starting the CLI:
+### II. Enabling Process Isolation (Antigravity Sandbox)
+To prevent agents from executing destructive or unverified shell scripts natively on your host OS, you can force all command execution into a secure, contained sandbox:
+
+1.  **Launch with Sandbox Flags (Recommended)**:
+    Simply launch the Antigravity session with the sandbox flag:
+    ```bash
+    agy --sandbox
+    # Or using the shorthand alias:
+    agy -s
+    ```
+2.  **Using Environment Variables**:
+    Alternatively, export the sandbox controller variable in your active terminal:
     ```bash
     export GEMINI_SANDBOX=docker
     ```
-2.  **Configure settings**: Ensure that terminal sandboxing is enabled inside your `settings.json`:
+    *(Other valid sandbox providers include `true` for auto-detect, `sandbox-exec` for native macOS containment, or `nsjail` on Linux).*
+3.  **Global Settings Configuration**:
+    To enforce sandboxing across all sessions, configure your global settings at `~/.gemini/antigravity-cli/settings.json`:
     ```json
     {
-      "enableTerminalSandbox": true
+      "enableTerminalSandbox": true,
+      "toolPermission": "proceed-in-sandbox"
     }
     ```
-    This forces Antigravity to boot gVisor-isolated Docker containers JIT, executing every `run_command` action inside a restricted, low-privilege runtime container, protecting your machine's kernel.
+    This ensures that any subsequent `run_command` executes inside a containerized, low-privilege sandbox, keeping your local host files and kernel fully protected.
+
 
 ---
 
@@ -315,8 +328,12 @@ Once the configurator writes your local workspace gates, exit the setup session 
 # Exit setup
 /exit
 
-# Launch secure, sandboxed coding session
+# Launch secure, sandboxed coding session with preferred OS sandbox:
+agy --sandbox
+
+# Or force Docker execution container:
 export GEMINI_SANDBOX=docker && agy
 ```
-Because the local plugins, hooks, rules, and ignores are now written, the subsequent coding session automatically runs inside a gVisor-isolated Docker sandbox. The agent will inherit all your exact linter hooks, blocked commands, and design rules, letting you write the application with zero compliance friction!
+Because the local plugins, hooks, rules, and ignores are now written, the subsequent coding session automatically runs inside a gVisor-isolated Docker sandbox (or native OS containment layer). The agent will inherit all your exact linter hooks, blocked commands, and design rules, letting you write the application with zero compliance friction!
+
 
