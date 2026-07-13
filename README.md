@@ -35,32 +35,50 @@ This repository houses your central Antigravity playbooks, flexible, hot-swappab
 
 ---
 
-## 🚀 Quick Start Guide (Git-to-Sandbox Loop)
+## 🚀 Quick Start Guide (Harness Bootstrapping)
 
-To bootstrap and harden any target workspace prior to coding, follow this simple 3-step loop:
+You can bootstrap and harden any target workspace prior to coding using either a single-line remote installer (no repository clone required) or a local clone.
 
-### Step 1: Run the Bootstrap Script
-Inside the target workspace you want to configure, execute the bootstrap script from this folder:
+### Option A: Remote Installer (Zero-Clone, Recommended)
+Inside the root of the target project workspace you want to configure, run this single-line command:
+```bash
+curl -fsSL https://raw.githubusercontent.com/carlosmscabral/antigravity-okf-customizations/main/install.py | python3
+```
+*This downloads all necessary DHC agent prompts, plugin assets, rules, scripts, and hooks directly from GitHub Raw and marks script gates as executable.*
+
+### Option B: Local Bootstrap (From Clone)
+If you have cloned this optimizations repository locally, run the bootstrap installer pointing to its path:
 ```bash
 cd /path/to/target/project
 python3 /path/to/antigravity_okf_customizations/bootstrap.py
 ```
-*This deploys the Harness Configurator Agent prompt and links the standard/strict plugins.*
+*This programmatically symlinks the plugins and copies the configurator agent prompt.*
 
-### Step 2: Run the Configurator Agent TUI
-Launch the interactive configuration session:
+---
+
+## ⚡ Interactive Configuration and Sandbox Handoff
+
+Once JIT-harness files are written, follow these simple handoff steps:
+
+### Step 1: Run the Configurator Agent
+Launch the interactive configuration session inside your workspace:
+
 ```bash
 agy --agent harness-configurator
 ```
 *The agent will greet you with its static discovery report, ask you key questions regarding your tech stack, database, and safety posture, and dynamically generate your harness settings.*
 
-### Step 3: Run the Sandbox Coding Session
-Once the configurator writes your local `settings.json` and hooks, start coding with 100% security:
+### Step 2: Run the Sandbox Coding Session
+Once the configurator writes your local `AGENTS.md` and hooks, start coding with 100% security containment:
 ```bash
-export GEMINI_SANDBOX=docker
-agy
+# Option A: Run with native OS sandboxing flags
+agy --sandbox
+
+# Option B: Run in isolated Docker container
+export GEMINI_SANDBOX=docker && agy
 ```
-*Because the configurations are now locked JIT, subsequent sessions automatically run inside a highly secure, restricted gVisor terminal container.*
+*Because the configurations are now locked JIT, subsequent sessions automatically run inside a highly secure sandbox matching your chosen posture and hooks.*
+
 
 ---
 
