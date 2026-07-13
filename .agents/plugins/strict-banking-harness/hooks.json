@@ -1,0 +1,24 @@
+{
+  "hooks": [
+    {
+      "trigger": "pre-command",
+      "commandPrefix": "curl",
+      "actions": [
+        {
+          "type": "block",
+          "message": "[Hooks - SECURE BANKING] Blocked command Prefix 'curl'. Downloading external files is strictly prohibited."
+        }
+      ]
+    },
+    {
+      "trigger": "pre-command",
+      "commandPrefix": "wget",
+      "actions": [
+        {
+          "type": "block",
+          "message": "[Hooks - SECURE BANKING] Blocked command Prefix 'wget'. Downloading external files is strictly prohibited."
+        }
+      ]
+    }
+  ]
+}

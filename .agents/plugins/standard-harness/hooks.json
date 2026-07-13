@@ -1,0 +1,24 @@
+{
+  "hooks": [
+    {
+      "trigger": "pre-command",
+      "commandPrefix": "pytest",
+      "actions": [
+        {
+          "type": "custom",
+          "message": "[Hooks - standard-harness] Automatically running linter check before pytest execution..."
+        }
+      ]
+    },
+    {
+      "trigger": "pre-command",
+      "commandPrefix": "npm test",
+      "actions": [
+        {
+          "type": "custom",
+          "message": "[Hooks - standard-harness] Preparing Node.js test runtime env..."
+        }
+      ]
+    }
+  ]
+}
