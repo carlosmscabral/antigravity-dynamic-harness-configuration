@@ -43,7 +43,35 @@ As your very first step upon entering any workspace, you must **silently scan th
 
 ---
 
-## Phase 2: Structured Discovery Dialog & Interactive Handoff
+## Phase 2: Core Customizations Catalog (Well-Known Skills & MCPs)
+
+When proposing the harness configuration, you **must always evaluate and suggest relevant entries** from this pre-cataloged list of industry-standard tools depending on your static analysis:
+
+### 1. Well-Known Skills (Trigger on Tech Stack / Goals)
+*   `git-commit-formatter` *(All Projects)*: Formats git commit messages according to Conventional Commits specifications.
+*   `a11y-debugging` *(Web/Frontend)*: Audits semantic HTML, ARIA labels, focus states, tap targets, and color contrast.
+*   `debug-optimize-lcp` *(Web/Frontend)*: Guides debugging and optimizing Largest Contentful Paint (LCP) performance.
+*   `memory-leak-debugging` *(Node.js/Scale)*: Diagnoses heap usage and leaks in JavaScript applications.
+*   `pytest-linter` *(Python)*: Automatically executes Black/Ruff before running tests via pytest.
+*   `sec-auditor` *(Banking/Security)*: Audits files for leaked secrets, subprocess injection vectors, and lock hashes.
+
+### 2. Common MCP Servers (Trigger on Connection Strings / Datastores)
+*   `postgres-explorer` *(PostgreSQL detected)*:
+    *   Command: `npx`
+    *   Args: `["-y", "@modelcontextprotocol/server-postgres", "--connection-string", "YOUR_CONN_STRING"]`
+*   `sqlite-explorer` *(SQLite detected)*:
+    *   Command: `npx`
+    *   Args: `["-y", "@modelcontextprotocol/server-sqlite", "--db", "YOUR_DB_FILE"]`
+*   `http-request` *(REST API integrations)*:
+    *   Command: `npx`
+    *   Args: `["-y", "@modelcontextprotocol/server-http-request"]`
+*   `firestore-mcp` *(Firestore/Firebase connections)*:
+    *   Command: `npx`
+    *   Args: `["-y", "@modelcontextprotocol/server-firestore"]`
+
+---
+
+## Phase 3: Structured Discovery Dialog & Interactive Handoff
 
 Once the discovery phase is complete, present the developer with a beautifully formatted **Harness Analysis Report** and start the interactive configuration interview.
 
@@ -52,39 +80,35 @@ Provide a clean summary of what you discovered:
 - **Detected Language/Framework**: e.g., Python (FastAPI).
 - **Detected Infrastructure**: e.g., PostgreSQL database references in `.env.example`.
 - **Pre-suggested Harness Profile**: e.g., `standard-harness` with automatic Python linter hooks.
+- **Proactively Proposed Skills/MCPs**: e.g., Propose `pytest-linter` skill and the `postgres-explorer` MCP.
 
 ### 2. Interview & Selection Panel
 Present the developer with clear, explicit options to customize their environment. Inform them that they can select, customize, or type their preferences:
 
 - **Harness Compliance Level**:
-  - `standard-harness` (Default): Pre-configured code-formatting rules, styling linters, and standard helper subagents.
-  - `strict-banking-harness`: Strict security. Air-gapped posture, network access blocks, curl/wget tool interception, zero administrative commands allowed.
-- **Model Context Protocol (MCP) Integrations**:
-  - `PostgreSQL MCP`: Grants the coding agent safe query/write reach to local databases.
-  - `Firebase Emulator MCP`: Pre-wired access to local Firestore or Auth emulators.
-  - `Custom MCP`: Allow the user to specify any custom command or SSE transport channel.
-- **Command Interceptors (Hooks)**:
-  - `Active Linting`: Run black/ruff before any test execution automatically.
-  - `Safety Gating`: Intercept and block critical admin commands (such as `rm -rf` outside workspace, raw `npm install` on public scopes).
+  - `standard-harness` (Default): Pre-configured rules (documentation, testing conventions), linter hooks, and the `refactoring-expert` subagent.
+  - `strict-banking-harness`: Strict security. Air-gapped rules (secrets, air gap), network blocks, curl/wget blocking hooks, and `crypto-auditor` subagent.
+- **Model Context Protocol (MCP) Integrations**: (Suggest matches from our Core Catalog).
+- **Additional Skills**: (Suggest matches from our Core Catalog).
 
 ---
 
-## Phase 3: Dynamic Provisioning (Harness Assembly)
+## Phase 4: Dynamic Provisioning (Harness Assembly)
 
 Once the user approves or refines your suggested setup, you must programmatically write the local configuration files:
 
 1.  **Write `.agents/mcp_config.json`**:
-    Only use valid schema options. Write clear, functional server transport setups.
+    Only use valid schema options (no `"type": "stdio"` fields!). Write clear, functional server transport setups.
 2.  **Write `.agents/hooks.json`**:
     Declare sequential command-sanitizers or blockers matching their safety posture.
-3.  **Write `.agents/AGENTS.md`**:
-    Extend the selected plugin rules (`standard-harness` or `strict-banking-harness`) and append any project-specific design patterns.
+3.  **Write `AGENTS.md` in Workspace Root**:
+    Write the high-level coordination workflow, linking references to the selected plugin and additional skills/subagents.
 4.  **Write `.antigravityignore`**:
     Auto-ignore temporary files, virtual environments (`.venv`, `node_modules`), logs, and credentials files.
 
 ---
 
-## Phase 4: Verification & Safe Handoff
+## Phase 5: Verification & Safe Handoff
 
 Once all assets are written, output a premium final message:
 
