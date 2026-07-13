@@ -2,36 +2,37 @@
 
 An operational repository that implements the **New SDLC** best practices using the **Google Antigravity (AGY)** agentic customization engine. 
 
-This repository houses your central Antigravity playbooks, flexible, hot-swappable plugins, and an interactive **Harness Configurator Agent** with a python bootstrap installer to instantly provision safe, sandboxed workspaces.
+This repository houses your central Antigravity playbooks, flexible, hot-swappable plugins, and an interactive **Harness Configurator Agent** with a dynamic, shell-only installer to instantly provision safe, sandboxed workspaces.
 
 ---
 
 ## ⚡ Key Components
 
 ```
-                      [CLONE TARGET REPOSITORY]
-                                 │
-                                 ▼
-                     [RUN bootstrap.py SCRIPT]
-                                 │
-                                 ▼ (Deploys Configurator Prompt & symlinks plugins)
-                 [agy --agent harness-configurator]
-                                 │
-        ┌────────────────────────┴────────────────────────┐
-        ▼ (Silently scans repository manifests)            ▼ (Interviews the developer)
- [Auto-Suggest Frameworks]                         [Selects standard/strict profiles]
-        └────────────────────────┬────────────────────────┘
-                                 │
-                                 ▼ (Generates settings, rules, hooks JIT)
-                  [READY FOR CODES IN SANDBOX!]
+                [A: REMOTE install.sh]            [B: LOCAL bootstrap.py]
+                          │                                  │
+                          └─────────────────┬────────────────┘
+                                            │
+                                            ▼ (Downloads / Links JIT custom rules)
+                             [agy --agent harness-configurator]
+                                            │
+                    ┌───────────────────────┴───────────────────────┐
+                    ▼ (Silently scans workspace)                     ▼ (Interviews the developer)
+             [Auto-Suggest Stack & Sources]                  [Selects standard/strict profile]
+                    └───────────────────────┬───────────────────────┘
+                                            │
+                                            ▼ (Generates root AGENTS.md, hooks, & ignores)
+                              [READY FOR CODES IN SANDBOX!]
 ```
 
-1.  **The Bootstrap Installer (`bootstrap.py`)**: A zero-dependency script. Running this in any cloned target project establishes local `.agents/` structures, copying the Configurator Agent and linking all reference plugins in one click.
-2.  **The Harness Configurator Agent (`agents/harness-configurator.md`)**: A specialized, pre-configured Antigravity Agent. It silent-scans your workspace manifests (`package.json`, `requirements.txt`), conducts a structured interview with the developer, and programmatically writes local `settings.json`, custom linter/blocker `hooks.json`, and `.antigravityignore` configurations.
-3.  **Flexible Customization Plugins (`.agents/plugins/`)**:
-    -   `standard-harness`: Enforces standard style guidelines, code formatting, linter execution, and testing boundaries.
-    -   `strict-banking-harness`: Implements an air-gapped, zero-network security perimeter. Restricts filesystem read/writes, blocks public package mirrors, and features **pre-command hooks blocking `curl` and `wget`** to prevent unverified script execution.
-4.  **Operational Integration Playbook (`playbooks/antigravity_integration_playbook.md`)**: The master manual detailing sandboxing parameters, hierarchical rule overrides, skill triggers, background tasks, sidecars, and Python SDK pipelines.
+1.  **The Shell Installer (`install.sh`)**: A lightweight, zero-dependency, and dynamic shell script (`curl | bash`). It downloads the customizations archive, JIT-unpacks the entire suite locally, and configures permissions without cloning the repository or hardcoding file names.
+2.  **The Bootstrap Installer (`bootstrap.py`)**: A fallback script for local, clone-based environments, programmatically symlinking plugins and deploying configurator assets in one click.
+3.  **The Harness Configurator Agent (`agents/harness-configurator.md`)**: A specialized, pre-configured Antigravity Agent. It silent-scans your workspace manifests (`package.json`, `requirements.txt`), conducts a structured interview with the developer, and programmatically writes your workspace root `AGENTS.md`, `.agents/mcp_config.json`, `.agents/hooks.json`, and `.antigravityignore` configurations.
+4.  **Flexible Customization Plugins (`.agents/plugins/`)**:
+    -   `standard-harness`: Enforces modular rules (documentation, testing conventions), standard formatting, linter execution, and the `refactoring-expert` subagent.
+    -   `strict-banking-harness`: Implements an air-gapped security perimeter. Restricts network boundaries, blocks public registries, and features **tool interceptor hooks blocking `curl` and `wget`** via `crypto-auditor` subagents.
+5.  **Operational Integration Playbook (`playbooks/antigravity_integration_playbook.md`)**: The master manual detailing sandboxing parameters, hierarchical rule overrides, skill triggers, background tasks, sidecars, and Python SDK pipelines.
+
 
 ---
 
