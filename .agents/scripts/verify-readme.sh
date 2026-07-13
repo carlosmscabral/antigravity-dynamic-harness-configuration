@@ -1,7 +1,13 @@
 #!/bin/bash
 # Antigravity (agy) Hook to ensure README.md is always in sync with customizations.
 
+# ⚡ Fast Exit: Only intercept git commit or push tool commands
+if [[ ! "$CommandLine" =~ "git commit" ]] && [[ ! "$CommandLine" =~ "git push" ]]; then
+    exit 0
+fi
+
 # Compare to origin/main or previous commits to detect modified configs
+
 comparison_target="origin/main"
 current_branch=$(git symbolic-ref --short HEAD 2>/dev/null || echo "main")
 
