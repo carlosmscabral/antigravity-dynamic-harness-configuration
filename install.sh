@@ -49,11 +49,15 @@ echo -e "[DHC] Provisioning local workspace structures..."
 mkdir -p .agents/agents
 mkdir -p .agents/plugins
 
+# Clean up any legacy, flat harness-configurator.md file from previous versions
+rm -f .agents/agents/harness-configurator.md
+
 # Copy agent prompts dynamically
 echo -e "[DHC] Moving harness-configurator agent..."
 if [ -d "$EXTRACT_DIR/agents" ]; then
     cp -R "$EXTRACT_DIR/agents/" .agents/agents/
 fi
+
 
 # Copy all plugins dynamically
 echo -e "[DHC] Moving customization library plugins recursively..."
@@ -73,7 +77,8 @@ echo -e "\n${BLUE}==============================================================
 echo -e "${GREEN}${BOLD}🎉 SUCCESS! DHC JIT-harness assets dynamically downloaded and ready.${NC}"
 echo -e "${BLUE}====================================================================${NC}"
 echo -e "\nTo launch the interactive configuration session with your setup agent:"
-echo -e "      ${YELLOW}${BOLD}agy --agent harness-configurator${NC}"
+echo -e "  1. Run: ${YELLOW}${BOLD}agy${NC}"
+echo -e "  2. Type: ${YELLOW}${BOLD}/agents${NC} and select ${BOLD}harness-configurator${NC}"
 echo -e "\nThis will:"
 echo -e "  1. Silently scan your code files and dependencies."
 echo -e "  2. Propose relevant rules, ignores, and secure upstream sources."

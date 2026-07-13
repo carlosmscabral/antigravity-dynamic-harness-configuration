@@ -14,7 +14,7 @@ This repository houses your central Antigravity playbooks, flexible, hot-swappab
                           └─────────────────┬────────────────┘
                                             │
                                             ▼ (Downloads / Links JIT custom rules)
-                             [agy --agent harness-configurator]
+                             [agy ──> /agents ──> harness-configurator]
                                             │
                     ┌───────────────────────┴───────────────────────┐
                     ▼ (Silently scans workspace)                     ▼ (Interviews the developer)
@@ -63,10 +63,14 @@ python3 /path/to/antigravity_okf_customizations/bootstrap.py
 Once JIT-harness files are written, follow these simple handoff steps:
 
 ### Step 1: Run the Configurator Agent
-Launch the interactive configuration session inside your workspace:
+Launch the interactive configuration session inside your workspace, then activate the configurator from the Agent Selection panel:
 
 ```bash
-agy --agent harness-configurator
+# 1. Start the session
+agy
+
+# 2. Type this mid-session and select 'harness-configurator'
+/agents
 ```
 *The agent will greet you with its static discovery report, ask you key questions regarding your tech stack, database, and safety posture, and dynamically generate your harness settings.*
 

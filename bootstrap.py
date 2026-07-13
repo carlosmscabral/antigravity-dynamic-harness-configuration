@@ -49,6 +49,11 @@ def bootstrap():
     target_agents_dir.mkdir(parents=True, exist_ok=True)
     target_plugins_dir.mkdir(parents=True, exist_ok=True)
     
+    # Clean up any legacy, flat harness-configurator.md file from previous versions
+    legacy_file = target_dir / ".agents" / "agents" / "harness-configurator.md"
+    if legacy_file.exists():
+        legacy_file.unlink()
+
     # 3. Deploy the Harness Configurator Agent
     src_agent_prompt = src_dir / "agents" / "harness-configurator" / "agent.md"
     target_agent_prompt = target_agents_dir / "agent.md"
@@ -59,6 +64,7 @@ def bootstrap():
         
     print(f"{GREEN}[DHC] Deploying Harness Configurator Agent prompt...{RESET}")
     shutil.copy2(src_agent_prompt, target_agent_prompt)
+
 
     
     # 4. Deploy standard/strict ACL Plugins
@@ -88,8 +94,9 @@ def bootstrap():
     print(f"\n{GREEN}{BOLD}===================================================================={RESET}")
     print(f"{GREEN}{BOLD}🎉 BOOTSTRAP COMPLETE! The Harness Configurator is ready to run.{RESET}")
     print(f"{GREEN}{BOLD}===================================================================={RESET}\n")
-    print(f"{BOLD}Next Step: Run the dynamic configurator inside your terminal:{RESET}")
-    print(f"      {YELLOW}{BOLD}agy --agent harness-configurator{RESET}\n")
+    print(f"{BOLD}Next Step: Launch the interactive configuration session:{RESET}")
+    print(f"  1. Run: {YELLOW}{BOLD}agy{RESET}")
+    print(f"  2. Type: {YELLOW}{BOLD}/agents{RESET} and select {BOLD}harness-configurator{RESET}\n")
     print(f"{BLUE}This will launch an interactive session where the configurator agent will:{RESET}")
     print(f"  1. Silently scan your directory to auto-suggest files and framework setups.")
     print(f"  2. Conduct a structured discovery chat to customize safety levels and databases.")
