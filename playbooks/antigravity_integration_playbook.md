@@ -277,51 +277,46 @@ Within your automation scripts or custom skills, use the `invoke_subagent` tool 
 
 ---
 
-## 8. Practical DHC Git-to-Sandbox Developer Loop with `agy`
+## 8. Practical DHC Git-to-Sandbox Developer Loop with `bootstrap.py`
 
-To configure and execute the **Dynamic Harness Configurator (DHC)** workflow in your day-to-day development using the standard **Antigravity CLI (`agy`)**, follow this 4-step Git-to-Sandbox developer loop.
+To configure and execute the **Dynamic Harness Configurator (DHC)** workflow in your day-to-day development, follow this 4-step Git-to-Sandbox developer loop. This eliminates manual configuration and JIT-provisions your workspace boundaries before coding.
 
-### Step 1: Link your central OKF Database Repository
-To make our best-practice concepts, rules, and playbooks universally accessible to your `agy` sessions:
-1.  **Globally (Recommended)**: Symlink your local OKF Knowledge Database repository path directly to the global customizations root:
-    ```bash
-    ln -s /path/to/cloned/new_sdlc_okf ~/.gemini/config/new_sdlc_okf
-    ```
-2.  **Workspace-scoped**: Alternatively, add your OKF database repository as a git submodule or folder directly inside your newly cloned project's `.agents/` folder.
+### Step 1: Clone your target repository
+When starting a new feature or project, clone the repository and move into its root directory:
+```bash
+git clone git@github.com:yourorg/temp_pizza_project.git
+cd temp_pizza_project
+```
 
-### Step 2: Clone your target repository & initialize `agy`
-When starting a new feature or project:
-1.  Clone the project repository and move into its root:
-    ```bash
-    git clone git@github.com:yourorg/temp_pizza_project.git
-    cd temp_pizza_project
-    ```
-2.  Boot up the Antigravity CLI session inside the clean workspace:
-    ```bash
-    agy
-    ```
-    *(At boot, `agy` dynamically discovers the linked OKF DB playbooks and skills from the global customization root at `~/.gemini/config/` and loads them into active memory).*
+### Step 2: Run the zero-dependency Bootstrap Installer
+Run the central customizations library installer inside your project root. This prepares your directory for the interactive setup chat:
+```bash
+python3 /path/to/cloned/antigravity-okf-customizations/bootstrap.py
+```
+*This programmatically creates `.agents/agents/`, deploys our specialized Harness Configurator Agent prompt, and symlinks your standard and strict banking plugins under `.agents/plugins/` in one command.*
 
-### Step 3: Prompt `agy` to execute the DHC bootstrap phase
-In your first message to the CLI, instruct the agent to act as the **Dynamic Harness Configurator** to bootstrap the workspace before starting any coding. Point it directly to your OKF rules and playbooks:
+### Step 3: Run the Configurator Agent to Provision your Harness JIT
+Boot up the Antigravity CLI session explicitly targeting the Configurator Agent:
+```bash
+agy --agent harness-configurator
+```
+*At boot, the Configurator Agent silently scans your workspace files (detecting `requirements.txt` or `package.json`), pre-suggests tailored testing and linter setups, and conducts an interactive interview to determine your compliance posture (e.g., standard vs. strict-banking).*
 
-> **Developer Prompt:**  
-> *"As our Dynamic Harness Configurator (DHC), read the playbooks at `/new_sdlc_okf/playbooks/` and our project's README/requirements. Let's bootstrap our local execution Harness before coding. Generate our workspace's secure `.gemini/antigravity-cli/settings.json` (force terminal sandboxing, disable non-workspace access), author `.agents/AGENTS.md` with our styling rules, and write our first Gherkin specification inside `/specs/`."*
+Based on your inputs, the agent dynamically:
+1.  Symlinks your selected harness plugins.
+2.  Writes `.agents/hooks.json` to configure sequential command-sanitizers or blockers (such as blocking public `npm` mirrors or external web curls).
+3.  Writes `.agents/AGENTS.md` and `.antigravityignore` files.
 
-`agy` will execute tools locally to:
-1.  Generate `.gemini/antigravity-cli/settings.json`.
-2.  Write your styling/coding conventions to `.agents/AGENTS.md`.
-3.  Draft `/specs/feature_name.feature` and `/evals/test_eval.json` to lock in **Spec-Driven Design (SDD)** and **Evaluation-Driven Design (EDD)**.
+*(Note: Workspace-scoped settings.json files are ignored by the Antigravity CLI to prevent malicious repositories from overriding your local execution permissions. All security and transport gates are managed locally via plugins, rules, and hooks, while sandboxing is handled in the next step).*
 
 ### Step 4: The Sandboxed Handoff
-Once the bootstrap outputs are written:
-1.  **Fork your thread**: Type `/fork` or `/branch` inside the TUI to branch your conversation thread into a clean, dedicated coding slate.
-2.  **Exit and Re-enter (Clean Sandbox Boot)**: Alternatively, exit the session and launch `agy` again.
-    ```bash
-    # Exit current bootstrap
-    /exit
-    
-    # Launch clean coding session
-    agy
-    ```
-    Because the local `settings.json` file is now written, **the subsequent session will automatically boot inside the restricted gVisor Docker sandbox**, pre-loaded with all your exact OKF rules, secure file boundaries, and custom project skills active. You can now build the application with 100% security compliance!
+Once the configurator writes your local workspace gates, exit the setup session and launch the coding agent inside a 100% compliant, container-isolated Sandbox:
+```bash
+# Exit setup
+/exit
+
+# Launch secure, sandboxed coding session
+export GEMINI_SANDBOX=docker && agy
+```
+Because the local plugins, hooks, rules, and ignores are now written, the subsequent coding session automatically runs inside a gVisor-isolated Docker sandbox. The agent will inherit all your exact linter hooks, blocked commands, and design rules, letting you write the application with zero compliance friction!
+

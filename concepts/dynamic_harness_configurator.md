@@ -1,178 +1,100 @@
 ---
 type: AI Methodology Concept
-title: Dynamic Harness Configurator (DHC) — Meta-Harness Engineering
-description: Design architecture for a bootstrap-level meta-agent that reads best-practice database constraints, dynamically provisions the agentic execution harness (sandboxes, MCP, skills, rules), and hands off a pre-configured environment to coding agents.
+title: Dynamic Harness Configurator (DHC) — Agentic Harness Engineering
+description: Overhauled architecture for an interactive, agent-driven bootstrap loop. Discovers repository stacks, suggests tailored safety/tool profiles, conducts developer interviews, and provisions hardened hooks and rules JIT.
 tags: [architecture, harness-engineering, security, automation, meta-agents]
-timestamp: 2026-07-13T15:03:00-03:00
+timestamp: 2026-07-13T16:03:00-03:00
 ---
 
-# Dynamic Harness Configurator (DHC) — Meta-Harness Engineering
+# Dynamic Harness Configurator (DHC) — Agentic Harness Engineering
 
-In traditional software development, the developer configures the environment. In the age of **Vibe Coding**, letting an autonomous agent execute unsandboxed or unconfigured tools is a high-risk security hazard and leads to rapid accumulation of **Context Debt** and **Capability Gaps**.
+In traditional software development, configuring the local development environment is a manual, error-prone task. In the era of **Vibe Coding**, allowing autonomous agents to operate unsandboxed or unconfigured is a massive security risk and causes rapid accumulation of **Context Debt** and **Capability Gaps**.
 
-The **Dynamic Harness Configurator (DHC)** is an architectural paradigm where a specialized, high-security **Meta-Agent** reads the project requirements and your core organization policies (OKF Database), dynamically structures and hardens the agentic execution environment (the Harness), and hands off this pre-configured container to a lower-security "Coding Agent" or to the human developer.
+The **Dynamic Harness Configurator (DHC)** is an agentic design paradigm. Instead of a static setup script, a specialized, high-security **Harness Architect Agent** is loaded JIT to scan the workspace manifests, interview the developer, suggest optimized tool sets, and programmatically construct the security, linter, and subagent perimeters *prior* to starting any implementation work.
 
 ---
 
-## 1. The Meta-Harness Separation of Concerns
+## 1. The Dynamic Handoff Topology
 
-By dividing the lifecycle into **Harness Provisioning** and **Code Execution**, we resolve the fundamental paradox: *An agent cannot securely configure its own sandbox from the inside.*
+By separating the setup into **Harness Provisioning** and **Code Implementation**, we resolve the fundamental paradox of agent security: *An agent cannot securely sandbox or restrict itself from the inside.*
 
 ```
                  ┌──────────────────────────────────────┐
-                 │       OKF KNOWLEDGE DATABASE         │
-                 │   - Playbooks, Rules, and Policies   │
+                 │    ANTIGRAVITY CUSTOMIZATION LIB     │
+                 │   - Standard & Strict banking plugins│
                  └──────────────────┬───────────────────┘
                                     │
-                                    ▼
+                                    ▼ [bootstrap.py Installer]
                  ┌──────────────────────────────────────┐
-                 │   DYNAMIC HARNESS CONFIGURATOR       │ (Meta-Agent)
-                 │  - Reads project requirements        │
-                 │  - Generates secure settings.json    │
-                 │  - Seeds skills, rules, and schemas  │
+                 │     HARNESS CONFIGURATOR AGENT       │
+                 │  - Silently scans framework manifests│
+                 │  - Interviews developer in TUI chat  │
+                 │  - Deploys rules, hooks, and ignores │
                  └──────────────────┬───────────────────┘
                                     │
-                                    ▼  [BOOTSTRAPS HARNESS]
+                                    ▼ [DYNAMIC JIT PROVISIONING]
                  ┌──────────────────────────────────────┐
-                 │       THE HARDENED HARNESS           │ (Isolated Container)
-                 │  - enableTerminalSandbox: true       │
-                 │  - allowNonWorkspaceAccess: false     │
-                 │  - Custom MCPs & skills pre-wired    │
+                 │         THE HARDENED HARNESS         │
+                 │  - env: GEMINI_SANDBOX=docker        │
+                 │  - Command-blocking hooks active     │
+                 │  - Customized subagents pre-wired     │
                  └──────────────────┬───────────────────┘
                                     │
-                                    ▼  [LAUNCHES HANDOFF]
+                                    ▼ [SANDBOXED CODES]
                  ┌──────────────────────────────────────┐
-                 │           CODING AGENT               │ (Developer/TUI Session)
-                 │  - Operates safely within boundaries │
+                 │          SECURE CODING AGENT         │
+                 │  - Executes tools inside gVisor      │
                  └──────────────────────────────────────┘
 ```
 
 ---
 
-## 2. The 4-Step DHC Lifecycle Pipeline
+## 2. Hard technical Constraints of the External CLI
 
-### Step 1: Requirements Discovery & Scan
-The DHC agent scans the user's high-level goal (e.g., *"Build a local FastAPI pizza app with Firebase Firestore storage"*). It determines:
-*   **FS Bounds**: Active workspace directories.
-*   **External Reach**: Needs Firestore MCP access, pytest shell tools, and port `8000` network ingress.
-*   **Security Posture**: Level 3 (requires strict docker/gVisor sandboxing and tool-call approval gates).
+When designing an operational DHC, we must adhere strictly to the security model of the external Antigravity CLI:
 
-### Step 2: Synthesis & Provisioning
-The DHC programmatically writes the configuration files to build the workspace boundaries *prior* to launching any code generators:
-1.  **Workspace Settings (`settings.json`)**:
-    *   Locks `"allowNonWorkspaceAccess": false` and downscopes `"allowed_paths"`.
-    *   Forces `"enableTerminalSandbox": true` and `"toolPermission": "request-review"`.
-    *   Binds the pre-configured Firestore MCP server transport channels.
-2.  **Repository Rules (`.agents/AGENTS.md`)**:
-    *   Writes strict styling and architectural guidelines to prevent vibe coding hallucinations.
-3.  **Skills Repository (`.agents/skills/`)**:
-    *   Seeds pre-built verification and compilation skills to enforce Spec-Driven and Evaluation-Driven development.
-
-### Step 3: Sandboxed Bootstrapping (JIT Isolation)
-The DHC exports environment flags to the active terminal:
-```bash
-export GEMINI_SANDBOX=docker
-export GEMINI_TRUSTED_WORKSPACE=$(pwd)
-```
-This forces the subsequent execution engine to spin up sandboxed runtimes, preventing any shell tools from touching the developer's underlying OS.
-
-### Step 4: Secure Handoff
-Once the boundary is active, the DHC spawns the actual **Coding Agent** as a child sub-agent thread inside this pre-wired environment, OR signals the human developer via a clean interface:
-> *"Your hardened workspace is ready at `/temp_pizza_project/` with gVisor sandboxing and Firestore MCP pre-configured. Type `agy` to begin coding safely."*
+1.  **No Workspace `settings.json`**: To prevent malicious repositories from silently hijacking developer environments, the CLI **completely ignores** local workspace settings (e.g., `.agents/settings.json` or `.gemini/settings.json`). 
+2.  **Global Sandbox Control**: Sandboxing levels (`enableTerminalSandbox`) are governed exclusively in the user's home directory (`~/.gemini/antigravity-cli/settings.json`) or via shell environment variables (`export GEMINI_SANDBOX=docker`).
+3.  **Local Workspace-Level Gates**: While global sandboxing is host-governed, the DHC agent dynamically manages workspace-level tool boundaries by generating:
+    *   `.agents/hooks.json`: Intercepting, linter-enforcing, or command-blocking gates (e.g., blocking `curl`/`wget`).
+    *   `.agents/AGENTS.md`: Cumulative repository rules and tech-stack conventions.
+    *   `.agents/plugins/`: Swapping whole compliance profiles (e.g., standard vs strict-banking).
+    *   `.antigravityignore`: Masking virtual envs, API credentials, and databases.
 
 ---
 
-## 3. Practical Implementation: The DHC Bootstrap Script
+## 3. The 3-Phase DHC Loop in Action
 
-The DHC can be programmatically executed using a simple, ungameable Python bootstrapping script. This script acts as the automated "harness factory":
+### Phase 1: Silent Discovery & Manifest Scan
+At boot, the DHC Agent silently scans the workspace directory. It avoids asking the user basic questions that can be extracted programmatically:
+*   **Node.js**: Detects `package.json` $\rightarrow$ Suggests node testing, formatting, and port bindings.
+*   **Python**: Detects `requirements.txt`/`pyproject.toml` $\rightarrow$ Suggests black/ruff linter hooks and pytest.
+*   **Datastores**: Detects `.env.example` SQL connection strings $\rightarrow$ Suggests loading a local database MCP.
 
-```python
-# bootstrap_harness.py
-import os
-import json
-import yaml
-from pathlib import Path
+### Phase 2: Interactive Developer Interview
+The agent presents a structured **Harness Discovery Report** inside the TUI and interviews the developer to confirm preferences:
+*   *"I detected Python (FastAPI) and PostgreSQL connection variables. I suggest our Standard Harness profile with local PostgreSQL MCP integrations and automatic pytest-linter hooks. Would you like to proceed, or switch to our air-gapped Strict Banking posture?"*
 
-class DynamicHarnessConfigurator:
-    def __init__(self, project_path: str, requirements: dict):
-        self.project_path = Path(project_path)
-        self.requirements = requirements
-        self.project_path.mkdir(parents=True, exist_ok=True)
-
-    def provision_settings(self):
-        # 1. Synthesize secure settings.json based on requirements
-        settings = {
-            "allowNonWorkspaceAccess": False,
-            "enableTerminalSandbox": True,
-            "toolPermission": "request-review",
-            "artifactReviewPolicy": "asks-for-review",
-            "trustedWorkspaces": [str(self.project_path.resolve())],
-            "permissions": {
-                "allowed_commands": ["pytest", "pip install", "uvicorn"],
-                "denied_commands": ["rm -rf /", "curl", "wget"]
-            }
-        }
-        
-        # Inject MCP configurations if database required
-        if self.requirements.get("database") == "firestore":
-            settings["mcp_servers"] = {
-                "firestore-mcp": {
-                    "command": "npx",
-                    "args": ["-y", "@modelcontextprotocol/server-firestore"],
-                    "env": {
-                        "FIREBASE_PROJECT_ID": self.requirements.get("firebase_project_id", "demo-pizza")
-                    }
-                }
-            }
-
-        config_dir = self.project_path / ".gemini" / "antigravity-cli"
-        config_dir.mkdir(parents=True, exist_ok=True)
-        with open(config_dir / "settings.json", "w") as f:
-            json.dump(settings, f, indent=2)
-        print("[DHC] Provisioned secure settings.json with sandboxing and Firestore MCP.")
-
-    def provision_rules(self):
-        # 2. Write project rules to .agents/AGENTS.md
-        agents_dir = self.project_path / ".agents"
-        agents_dir.mkdir(parents=True, exist_ok=True)
-        
-        rules_content = """# Project Rules for Configured Workspace
-
-## 1. Safety & Sandboxing
-* All shell commands run inside our gVisor docker container.
-* Never disable sandboxing or write credentials to the git tree.
-
-## 2. Spec-First & EDD (Evaluation-Driven Design)
-* A Gherkin spec inside `/specs/` must precede any logic.
-* You must define at least 3 evaluation cases inside `/evals/` before coding.
-"""
-        with open(agents_dir / "AGENTS.md", "w") as f:
-            f.write(rules_content)
-        print("[DHC] Created project rules at .agents/AGENTS.md.")
-
-    def execute_bootstrap(self):
-        self.provision_settings()
-        self.provision_rules()
-        print(f"\n[DHC SUCCESS] Hardened Harness is successfully established at: {self.project_path}")
-        print("[DHC HANDOFF] Ready to launch the coding agent inside the secure sandbox.")
-
-if __name__ == "__main__":
-    # Example requirement ingestion
-    reqs = {
-        "database": "firestore",
-        "firebase_project_id": "pizza-ordering-35a2"
-    }
-    dhc = DynamicHarnessConfigurator(
-        project_path="/Users/carloscabral/.gemini/antigravity/scratch/temp_pizza_project",
-        requirements=reqs
-    )
-    dhc.execute_bootstrap()
-```
+### Phase 3: JIT Provisioning (Assembly)
+Upon confirmation, the agent uses its filesystem tools to write the customized workspace boundaries:
+*   Deploys selected plugins (e.g., `standard-harness` or `strict-banking-harness` containing pre-built rules and blocker hooks).
+*   Writes `.agents/hooks.json` to configure interceptors.
+*   Writes `.antigravityignore` to restrict agent visibility.
+*   Signals completion, instructing the user to run the sandbox handoff command.
 
 ---
 
-## 4. Why This Architecture is Game-Changing
+## 4. Operational Implementation Patterns
 
-1.  **Eliminates the "Trust Gap"**: By forcing the environment layout, sandboxing rules, and allowed tools before the coding model starts, you completely remove the threat of malicious code executions or data exfiltration during the "vibe coding" phase.
-2.  **Bypasses Context Bloat**: Instead of asking the coding agent to hold sandboxing rules, Firestore API definitions, and Gherkin formatting guides in its prompt memory, the DHC seeds these into the directory structure. The coding model discovers them naturally through the file system and local skills, saving thousands of tokens and improving focal attention.
-3.  **Perfect Reproducibility**: Any project initialized by the DHC contains a deterministic, self-documenting agent setup. Any other agent (or CI builder) that loads the directory will run it in the exact same sandboxed, compliant configuration.
+### I. The Configurator Agent Prompt (`agents/harness-configurator.md`)
+The DHC agent is equipped with a highly structured prompt commanding filesystem access and instructing it how to compose `.agents/mcp_config.json` and `.agents/hooks.json` schemas dynamically based on user selections.
+
+### II. The Bootstrap Installer (`bootstrap.py`)
+A robust, zero-dependency Python bootstrap script resides at the repository root. When executed inside a clean target workspace, it programmatically symlinks the customizations library and copies the configurator agent prompt, preparing the workspace for the interactive setup chat.
+
+---
+
+## 5. Architectural Benefits
+
+*   **Bypasses Context Bloat**: Pre-wiring rules and hooks into `.agents/` eliminates the need to load extensive guidelines into the model's memory, reducing token consumption and focusing attention.
+*   **Absolute Compliance**: Forcing command-blocking gates (such as intercepting public `npm install` scopes or external web curls) ensures that the subsequently booted coding agent cannot violate organizational security rules, even if malicious instructions are injected into the codebase.
