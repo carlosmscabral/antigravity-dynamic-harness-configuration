@@ -86,12 +86,13 @@ export GEMINI_SANDBOX=docker && agy
 
 ## 🛡️ Meta-Compliance Governance
 
-To ensure this operational customization repository never suffers from stale documentation, we enforce double-layered git-level checks:
+To ensure this operational customization repository never suffers from stale documentation, we enforce native **Antigravity Tool Interceptor Hooks (`agy-hooks`)**:
 
-1.  **Staging warning (`.git/hooks/pre-commit`)**: Soft-warns the developer if they stage configuration, installer, or plugin changes without staging a corresponding update to `README.md`.
-2.  **Push blocker (`.git/hooks/pre-push`)**: Hard-blocks `git push` if code files or prompt models compared to `origin/main` are altered but `README.md` remains untouched.
+*   **Tool Interceptor Hook (`.agents/hooks.json` $\rightarrow$ `.agents/scripts/verify-readme.sh`)**: Intercepts command-execution tools (such as staging, commits, or pushes inside `agy` sessions).
+*   **Compliance Block**: If changes are detected in core configurations (such as `agents/`, `.agents/plugins/`, `install.sh`, or `bootstrap.py`) compared to `origin/main` but `README.md` is **not updated**, the hook outputs a high-consequence panel and halts the tool execution!
 
-These checks guarantee that documentation is treating as a first-class citizen alongside configurations!
+These checks guarantee that documentation is treated as a first-class citizen alongside configurations inside active `agy` sessions!
+
 
 ---
 
