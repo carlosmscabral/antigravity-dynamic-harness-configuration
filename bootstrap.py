@@ -42,7 +42,7 @@ def bootstrap():
         print(f"{YELLOW}[DHC] Source and target are identical. Entering developer sandbox mode.{RESET}")
     
     # 2. Establish target agent folders
-    target_agents_dir = target_dir / ".agents" / "agents"
+    target_agents_dir = target_dir / ".agents" / "agents" / "harness-configurator"
     target_plugins_dir = target_dir / ".agents" / "plugins"
     
     print(f"{GREEN}[DHC] Provisioning local workspace gates at .agents/...{RESET}")
@@ -50,8 +50,8 @@ def bootstrap():
     target_plugins_dir.mkdir(parents=True, exist_ok=True)
     
     # 3. Deploy the Harness Configurator Agent
-    src_agent_prompt = src_dir / "agents" / "harness-configurator.md"
-    target_agent_prompt = target_agents_dir / "harness-configurator.md"
+    src_agent_prompt = src_dir / "agents" / "harness-configurator" / "agent.md"
+    target_agent_prompt = target_agents_dir / "agent.md"
     
     if not src_agent_prompt.exists():
         print(f"\033[91m[DHC ERROR] Could not find the source agent prompt at {src_agent_prompt}{RESET}")
@@ -59,6 +59,7 @@ def bootstrap():
         
     print(f"{GREEN}[DHC] Deploying Harness Configurator Agent prompt...{RESET}")
     shutil.copy2(src_agent_prompt, target_agent_prompt)
+
     
     # 4. Deploy standard/strict ACL Plugins
     src_plugins = src_dir / ".agents" / "plugins"
