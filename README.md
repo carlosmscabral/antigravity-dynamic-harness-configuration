@@ -26,12 +26,15 @@ This repository houses your central Antigravity playbooks, flexible, hot-swappab
 ```
 
 1.  **The Shell Installer (`install.sh`)**: A lightweight, zero-dependency, and dynamic shell script (`curl | bash`). It downloads the customizations archive, JIT-unpacks the entire suite locally, and configures permissions without cloning the repository or hardcoding file names.
-2.  **The Bootstrap Installer (`bootstrap.py`)**: A fallback script for local, clone-based environments, programmatically symlinking plugins and deploying configurator assets in one click.
-3.  **The Harness Configurator Agent (`agents/harness-configurator.md`)**: A specialized, pre-configured Antigravity Agent. It silent-scans your workspace manifests (`package.json`, `requirements.txt`), conducts a structured interview with the developer, and programmatically writes your workspace root `AGENTS.md`, `.agents/mcp_config.json`, `.agents/hooks.json`, and `.antigravityignore` configurations.
-4.  **Flexible Customization Plugins (`.agents/plugins/`)**:
-    -   `standard-harness`: Enforces modular rules (documentation, testing conventions), standard formatting, linter execution, and the `refactoring-expert` subagent.
-    -   `strict-banking-harness`: Implements an air-gapped security perimeter. Restricts network boundaries, blocks public registries, and features **tool interceptor hooks blocking `curl` and `wget`** via `crypto-auditor` subagents.
-5.  **Operational Integration Playbook (`playbooks/antigravity_integration_playbook.md`)**: The master manual detailing sandboxing parameters, hierarchical rule overrides, skill triggers, background tasks, sidecars, and Python SDK pipelines.
+2.  **The Bootstrap Installer (`bootstrap.py`)**: A local, programmatic python utility that symlinks or copies templates and deploys assets to `.agents/` in one click.
+3.  **The Harness Configurator Agent (`agents/harness-configurator/agent.md`)**: A simplified, decoupled, and generic setup orchestrator. It silent-scans your workspace for manifests and SDK indicators, conducts a structured interview with the developer, and programmatically copies selected plugins JIT, writes `.agents/mcp_config.json`, `.agents/hooks.json`, and `.antigravityignore`.
+4.  **Dormant Plugins Cache (`.agents/plugins_cache/`)**: An inactive holding directory. Storing your customization library plugins here prevents them from auto-activating on startup. Only selected plugins are promoted JIT into `.agents/plugins/` by the configurator!
+5.  **Modular Customization Plugins**:
+    -   `standard-harness` *(General SDLC)*: Enforces standard styling, modular testing conventions, formatting linter execution, and the `refactoring-expert` subagent.
+    -   `strict-banking-harness` *(Enterprise Security)*: Establishes a strict air-gapped security perimeter, restrictions, and **command-interceptor hooks blocking `curl`/`wget`** via `crypto-auditor` subagents.
+    -   `adk-developer` *(Specialty ADK)*: Tailored for Google Agent Development Kit (ADK) projects. It **loads `agents-cli` as cognitive AI Skills (under `.agents/skills/`)**, enforces pre-flight Pydantic schema validation, documentation grounding, and design pattern replication from Google samples.
+6.  **Operational Integration Playbook (`playbooks/antigravity_integration_playbook.md`)**: The master manual detailing sandboxing parameters, hierarchical rule overrides, skill triggers, background tasks, sidecars, and Python SDK pipelines.
+
 
 
 ---
