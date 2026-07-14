@@ -1,5 +1,0 @@
-{
-  "name": "strict-banking-harness",
-  "description": "Strict, Zero-Trust compliance harness plugin for regulated or high-security financial transactions. Blocks external URL reads/executions, enforces absolute sandboxing, and runs exhaustive multi-agent verification.",
-  "version": "1.0.0"
-}

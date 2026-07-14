@@ -1,13 +1,22 @@
 #!/bin/bash
 # 🚀 Antigravity Dynamic Harness Configurator (DHC) Shell Installer
-# Dynamically installs the latest DHC and plugins without cloning or hardcoding file names.
+# Thin installer: fetches the harness-configurator agent from this repo and the
+# harness plugins + skills from the cabral-skills monorepo at a PINNED git tag.
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/carlosmscabral/antigravity-dynamic-harness-configuration/main/install.sh | bash
 
 set -e
 
-# Banners and Colors
+# ── Pinned content source ────────────────────────────────────────────────────
+# Plugins and skills live in the cabral-skills monorepo. Bump this tag to adopt
+# a new release of the customization library. Everything (plugins + skills) is
+# fetched at this single tag so a promoted plugin and the skills it references
+# are always mutually consistent.
+CABRAL_SKILLS_REPO="carlosmscabral/cabral-skills"
+CABRAL_SKILLS_TAG="v1.0.0"
+
+# ── Banners and Colors ───────────────────────────────────────────────────────
 RED='\033[91m'
 GREEN='\033[92m'
 YELLOW='\033[93m'
@@ -20,7 +29,8 @@ echo -e "${BLUE}${BOLD}     🚀 ANTIGRAVITY DYNAMIC HARNESS CONFIGURATOR (DHC) 
 echo -e "${BLUE}====================================================================${NC}"
 
 WORKSPACE_ROOT=$(pwd)
-echo -e "[DHC] Local target workspace: ${BOLD}${WORKSPACE_ROOT}${NC}\n"
+echo -e "[DHC] Local target workspace: ${BOLD}${WORKSPACE_ROOT}${NC}"
+echo -e "[DHC] Content source: ${BOLD}${CABRAL_SKILLS_REPO}@${CABRAL_SKILLS_TAG}${NC}\n"
 
 # Verify system utilities
 if ! command -v curl &> /dev/null; then
@@ -33,50 +43,80 @@ if ! command -v unzip &> /dev/null; then
     exit 1
 fi
 
-# Define temp download targets
-TEMP_ZIP="dhc_archive.zip"
-EXTRACT_DIR="antigravity-dynamic-harness-configuration-main"
-REPO_ZIP_URL="https://github.com/carlosmscabral/antigravity-dynamic-harness-configuration/archive/refs/heads/main.zip"
+# ── Download targets ─────────────────────────────────────────────────────────
+DHC_ZIP="dhc_archive.zip"
+DHC_EXTRACT="antigravity-dynamic-harness-configuration-main"
+DHC_ZIP_URL="https://github.com/carlosmscabral/antigravity-dynamic-harness-configuration/archive/refs/heads/main.zip"
 
-echo -e "[DHC] Fetching latest customization assets archive from GitHub..."
-curl -fsSL -o "$TEMP_ZIP" "$REPO_ZIP_URL"
+SKILLS_ZIP="cabral_skills_archive.zip"
+SKILLS_ZIP_URL="https://github.com/${CABRAL_SKILLS_REPO}/archive/refs/tags/${CABRAL_SKILLS_TAG}.zip"
 
-echo -e "[DHC] Unpacking archive dynamically..."
-unzip -q -o "$TEMP_ZIP"
+# 1) Fetch the DHC repo (for the configurator agent). Latest/main is fine — this
+#    is the installer itself, not the pinned content.
+echo -e "[DHC] Fetching harness-configurator agent from DHC repo..."
+curl -fsSL -o "$DHC_ZIP" "$DHC_ZIP_URL"
+unzip -q -o "$DHC_ZIP"
 
-# Establish target directories
+# 2) Fetch the cabral-skills monorepo at the PINNED TAG (plugins + skills).
+#    curl -f makes a nonexistent tag fail fast with a clear error.
+echo -e "[DHC] Fetching plugins + skills from ${CABRAL_SKILLS_REPO}@${CABRAL_SKILLS_TAG}..."
+if ! curl -fsSL -o "$SKILLS_ZIP" "$SKILLS_ZIP_URL"; then
+    echo -e "${RED}ERROR: Could not download ${CABRAL_SKILLS_REPO}@${CABRAL_SKILLS_TAG}.${NC}" >&2
+    echo -e "${RED}       Verify the tag exists: ${SKILLS_ZIP_URL}${NC}" >&2
+    rm -f "$DHC_ZIP" "$SKILLS_ZIP"; rm -rf "$DHC_EXTRACT"
+    exit 1
+fi
+unzip -q -o "$SKILLS_ZIP"
+
+# GitHub strips the leading "v" from the extracted tag folder (cabral-skills-1.0.0).
+# Resolve by glob rather than hardcoding.
+SKILLS_EXTRACT=$(find . -maxdepth 1 -type d -name 'cabral-skills-*' | head -n 1)
+if [ -z "$SKILLS_EXTRACT" ] || [ ! -d "$SKILLS_EXTRACT/plugins" ]; then
+    echo -e "${RED}ERROR: cabral-skills archive did not contain a plugins/ directory.${NC}" >&2
+    rm -f "$DHC_ZIP" "$SKILLS_ZIP"; rm -rf "$DHC_EXTRACT" "$SKILLS_EXTRACT"
+    exit 1
+fi
+
+# ── Provision local workspace ────────────────────────────────────────────────
 echo -e "[DHC] Provisioning local workspace structures..."
-# Clean existing targets first to prevent ghost files
+# Clean rebuild of the dormant caches and the configurator agent.
 rm -rf .agents/agents/harness-configurator
 rm -rf .agents/plugins_cache
+rm -rf .agents/skills_cache
 
 mkdir -p .agents/agents
 mkdir -p .agents/plugins_cache
+mkdir -p .agents/skills_cache
 
 # Clean up any legacy, flat harness-configurator.md file from previous versions
 rm -f .agents/agents/harness-configurator.md
 
-# Copy agent prompts dynamically
-echo -e "[DHC] Moving harness-configurator agent..."
-if [ -d "$EXTRACT_DIR/agents" ]; then
-    cp -R "$EXTRACT_DIR/agents/" .agents/agents/
+# Deploy the configurator agent (from the DHC repo). The "/." copies the CONTENTS
+# of agents/ into .agents/agents/ so the result is
+# .agents/agents/harness-configurator/ (not a nested .agents/agents/agents/).
+echo -e "[DHC] Deploying harness-configurator agent..."
+if [ -d "$DHC_EXTRACT/agents" ]; then
+    cp -R "$DHC_EXTRACT/agents/". .agents/agents/
 fi
 
-# Copy all plugins dynamically to the inactive cache folder
-echo -e "[DHC] Staging customization library plugins in cache recursively..."
-if [ -d "$EXTRACT_DIR/.agents/plugins" ]; then
-    cp -R "$EXTRACT_DIR/.agents/plugins/" .agents/plugins_cache/
+# Stage plugins (dormant) and skills (local cache) from cabral-skills@tag.
+echo -e "[DHC] Staging plugins into dormant cache..."
+cp -R "$SKILLS_EXTRACT/plugins/". .agents/plugins_cache/
+
+echo -e "[DHC] Staging skills into local cache (air-gap-safe promotion source)..."
+if [ -d "$SKILLS_EXTRACT/skills" ]; then
+    cp -R "$SKILLS_EXTRACT/skills/". .agents/skills_cache/
 fi
 
-# Make any scripts inside the harness and cached plugins executable
+# Make any scripts inside the harness, cached plugins, and cached skills executable
 echo -e "[DHC] Enforcing execution permissions on scripts..."
 find .agents/ -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
 find .agents/ -name "*.py" -exec chmod +x {} + 2>/dev/null || true
 
-
-# Cleanup temp files
+# ── Cleanup (preserve plugins_cache/ + skills_cache/) ────────────────────────
 echo -e "[DHC] Cleaning up temporary download caches..."
-rm -rf "$TEMP_ZIP" "$EXTRACT_DIR"
+rm -f "$DHC_ZIP" "$SKILLS_ZIP"
+rm -rf "$DHC_EXTRACT" "$SKILLS_EXTRACT"
 
 echo -e "\n${BLUE}====================================================================${NC}"
 echo -e "${GREEN}${BOLD}🎉 SUCCESS! DHC JIT-harness assets dynamically downloaded and ready.${NC}"

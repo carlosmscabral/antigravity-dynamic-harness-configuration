@@ -26,11 +26,11 @@ if ! git rev-parse --verify "$comparison_target" &>/dev/null; then
 fi
 
 # Check modified customizations in current diff scope
-CH_PROMPTS=$(git diff --name-only "$comparison_target" | grep -E "agents/|\.agents/plugins/|install.sh|bootstrap.py" || true)
+CH_PROMPTS=$(git diff --name-only "$comparison_target" | grep -E "agents/|install.sh|bootstrap.py" || true)
 CH_README=$(git diff --name-only "$comparison_target" | grep "README.md" || true)
 
 # Also check staged changes in case of pre-commit tool actions
-STAGED_PROMPTS=$(git diff --name-only --cached | grep -E "agents/|\.agents/plugins/|install.sh|bootstrap.py" || true)
+STAGED_PROMPTS=$(git diff --name-only --cached | grep -E "agents/|install.sh|bootstrap.py" || true)
 STAGED_README=$(git diff --name-only --cached | grep "README.md" || true)
 
 if { [ -n "$CH_PROMPTS" ] && [ -z "$CH_README" ]; } || { [ -n "$STAGED_PROMPTS" ] && [ -z "$STAGED_README" ]; }; then

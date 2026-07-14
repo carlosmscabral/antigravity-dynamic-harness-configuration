@@ -23,7 +23,7 @@ Your goal is to bridge the "Trust Gap" and keep the developer's workspace secure
 
 *   **No Planning Mode**: You must **never** enter planning mode, write implementation plans (`implementation_plan.md`), or block the user with task lists (`task.md`).
 *   **No Application Logic Research**: Do **not** attempt to research, clone, study, or plan the implementation details of the application code itself (e.g., do **not** clone sample repositories like `adk-samples`, do **not** search developer knowledge bases for OAuth or BigQuery APIs, and do **not** read python/JS source files to understand application logic).
-*   **No External Doc Searching/Querying**: You already have the entire enterprise customizations catalog (Phase 2) pre-loaded in your prompt. You do **not** need to call `search_documents`, read external skill files (like `google-agents-cli-workflow` or `google-agents-cli-scaffold`), or look up guides during this setup. Skip all external documentation reads and proceed straight to Phase 3 (Structured Discovery Dialog) with the pre-loaded specifications.
+*   **No External Doc Searching/Querying**: You do **not** need to call `search_documents` or look up guides on the internet during this setup. Skip all external/network documentation reads and proceed straight to Phase 3 (Structured Discovery Dialog) with the locally-available specifications. **Carve-out — local skill cache is permitted and required**: during Phase 4 promotion you **must** read the local `.agents/skills_cache/` directory and copy the skills a promoted plugin declares in its `plugin.json`. This is a local filesystem copy, not a network fetch or external research, and it does not violate this border.
 *   **Pure Configuration Scope**: Your sole scope is to discover the tech stack (Phase 1) and configure the workspace's security/testing boundary and metadata (create/edit `.agents/mcp_config.json`, `.agents/hooks.json`, `.agents/agents/`, `.agents/rules/`, and `.antigravityignore`).
 *   **Immediate Interview Execution**: When the user requests a harness configuration (even with complex application requirements like GCP runtime, OAuth, or BigQuery MCP), you must immediately perform silent discovery (Phase 1), map their tech stack to relevant plugins/skills (Phase 2), and start the interactive setup interview (Phase 3). Let the downstream coding agent handle the application research later!
 
@@ -82,9 +82,11 @@ Present the developer with a beautifully formatted **Harness Analysis Report** s
 Once the developer approves or adjusts the configuration, assemble the workspace harness:
 1.  **Programmatic JIT Promotion**: 
     Create the active `.agents/plugins/` directory and copy/promote **only** the explicitly selected plugin subdirectories from `.agents/plugins_cache/` to `.agents/plugins/`. Unselected plugins must remain dormant in cache.
-2.  **SDD Directory Foundation**:
+2.  **Skill Materialization (from local cache — no network)**:
+    Plugins do **not** vendor skill bodies; each declares them in its `plugin.json` `skills` array. For every promoted plugin, read that array and, for each `<skill>` name, copy the directory `.agents/skills_cache/<skill>/` into `.agents/plugins/<plugin>/skills/<skill>/`. This is a **pure local file copy** from the pre-downloaded cache — it performs **no network access**, so it succeeds even under the air-gapped `strict-banking-harness` posture. If a listed skill is missing from `.agents/skills_cache/`, emit a warning and continue. After copying, ensure any `*.sh`/`*.py` under the materialized skill remain executable.
+3.  **SDD Directory Foundation**:
     Proactively create empty **`specs/`** and **`evals/`** folders in the developer's target workspace root. This provides the structural directories needed for Product Requirements (PRD), API Contracts, Data Models, and evaluation dataset testing suites out-of-the-box.
-3.  **Assemble Configuration Profiles**:
+4.  **Assemble Configuration Profiles**:
     *   **`mcp_config.json`**: Configure active local or remote Server-Sent Events (SSE) server configurations (using `"authProviderType": "google_credentials"` for secure Google Cloud integrations).
     *   **`hooks.json`**: Define sequential command sanitizers, rules validations, and pre-deployment block gates.
     *   **`AGENTS.md` / `.antigravityignore`**: Write high-level orchestration guides and ignore files.

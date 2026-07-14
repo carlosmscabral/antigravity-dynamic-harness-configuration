@@ -2,7 +2,7 @@
 
 An operational repository implementing modern **agentic SDLC sandboxing and harness customization** using the **Google Antigravity (AGY)** engine.
 
-This repository houses central Antigravity playbooks, modular hot-swappable plugins, and an interactive **Harness Configurator Agent** with a dynamic installer to instantly provision safe, sandboxed workspaces.
+This repository is a **thin installer**: it houses the interactive **Harness Configurator Agent**, the dynamic installers (`install.sh` / `bootstrap.py`), and the Antigravity playbooks. The harness **plugins and skills themselves live in the [cabral-skills](https://github.com/carlosmscabral/cabral-skills) monorepo** (the single source of truth) and are fetched at a **pinned git tag** at install time.
 
 ---
 
@@ -16,8 +16,9 @@ Inside the root of the target project folder you want to configure, run the dyna
 curl -fsSL https://raw.githubusercontent.com/carlosmscabral/antigravity-dynamic-harness-configuration/main/install.sh | bash
 ```
 > [!NOTE]
-> For offline/air-gapped banking environments, clone this repo and run the local installer instead:
-> `python3 /path/to/cloned/antigravity-dynamic-harness-configuration/bootstrap.py`
+> For offline/air-gapped banking environments, clone **both** this repo and [cabral-skills](https://github.com/carlosmscabral/cabral-skills) side by side, then run the local installer:
+> `python3 /path/to/antigravity-dynamic-harness-configuration/bootstrap.py`
+> It sources plugins + skills from `../cabral-skills` by default (override with `CABRAL_SKILLS_DEV_PATH`).
 
 ### 2. Run the Interactive Configurator
 Open your Antigravity session and activate the configurator agent:
@@ -65,22 +66,24 @@ export GEMINI_SANDBOX=docker && agy
 
 ## ⚡ Key Components & Architecture
 
-1.  **The Shell Installer (`install.sh`)**: A lightweight, zero-dependency shell script. It dynamically fetches the latest optimizations archive, unpacks the entire suite locally, and configures permissions without hardcoding file names.
-2.  **The Bootstrap Installer (`bootstrap.py`)**: A local python utility that programmatically symlinks (for active development) or copies files and deploys config files to `.agents/` in one execution.
-3.  **The Harness Configurator Agent (`agents/harness-configurator/agent.md`)**: A simplified, decoupled setup orchestrator. It silent-scans your workspace for frameworks and SDK manifest indicators, conducts a structured interview with the developer, and programmatically copies selected plugins, writes `.agents/mcp_config.json`, `.agents/hooks.json`, and `.antigravityignore`.
-4.  **Dormant Plugins Cache (`.agents/plugins_cache/`)**: An inactive cache directory. Storing your customization plugins here prevents them from auto-activating on startup. Only selected plugins are promoted JIT into `.agents/plugins/` by the configurator.
+1.  **The Shell Installer (`install.sh`)**: A lightweight, zero-dependency shell script. It fetches the configurator agent from this repo and the plugins + skills from `cabral-skills` at the **pinned tag** (`CABRAL_SKILLS_TAG`, top of the script — bump it to adopt a new content release), unpacks them into local caches, and configures permissions.
+2.  **The Bootstrap Installer (`bootstrap.py`)**: A local python utility for developer/offline mode. It symlinks (for live edits) or copies plugins + skills from a local `cabral-skills` checkout (`../cabral-skills` by default, or `CABRAL_SKILLS_DEV_PATH`) into the `.agents/` caches.
+3.  **The Harness Configurator Agent (`agents/harness-configurator/agent.md`)**: A simplified, decoupled setup orchestrator. It silent-scans your workspace, conducts a structured interview, promotes selected plugins, **materializes each promoted plugin's declared skills from `.agents/skills_cache/`** (a local copy — no network, air-gap safe), and writes `.agents/mcp_config.json`, `.agents/hooks.json`, and `.antigravityignore`.
+4.  **Dormant Caches (`.agents/plugins_cache/` + `.agents/skills_cache/`)**: Inactive cache directories populated at install. Plugins here do not auto-activate; only selected plugins are promoted JIT into `.agents/plugins/`, at which point their declared skills are copied in from `skills_cache/`.
 5.  **Operational Integration Playbook (`playbooks/antigravity_integration_playbook.md`)**: The master manual detailing sandboxing parameters, hierarchical rule overrides, skill triggers, background tasks, sidecars, and Python SDK pipelines.
 
 ---
 
 ## 🔌 Modular Customization Plugins
 
+> Plugins are defined in the [cabral-skills](https://github.com/carlosmscabral/cabral-skills) monorepo under `plugins/`. Each plugin references the skills it uses by name (`plugin.json` → `skills[]`); those skill bodies live under `cabral-skills/skills/` and are materialized into the active plugin at promotion time.
+
 *   **`standard-harness` (General SDLC)**:
     Enforces standard styling, modular testing conventions, formatting linter execution, the `refactoring-expert` subagent, and deploys a robust default `.antigravityignore` template.
 *   **`strict-banking-harness` (Enterprise Security)**:
     Establishes a strict, air-gapped security perimeter with **command-interceptor hooks blocking `curl`/`wget`** via `crypto-auditor` subagents.
 *   **`adk-developer` (Specialty ADK)**:
-    Tailored for Google Agent Development Kit (ADK) projects. It **loads `agents-cli` as cognitive AI Skills (under `.agents/skills/`)**, enforces pre-flight Pydantic schema validation, and **configures the `adk-docs-mcp` server out-of-the-box** to retrieve real-time classes and SDK tutorials directly from `https://adk.dev/llms.txt`.
+    Tailored for Google Agent Development Kit (ADK) projects. It **materializes the `google-agents-cli-adk-frontend` cognitive AI Skill** into the active plugin, enforces pre-flight Pydantic schema validation, and **configures the `adk-docs-mcp` server out-of-the-box** to retrieve real-time classes and SDK tutorials directly from `https://adk.dev/llms.txt`.
 
 ---
 
@@ -89,7 +92,7 @@ export GEMINI_SANDBOX=docker && agy
 To ensure this operational customization repository never suffers from stale documentation, we enforce native **Antigravity Tool Interceptor Hooks (`agy-hooks`)**:
 
 *   **Tool Interceptor Hook (`.agents/hooks.json` $\rightarrow$ `.agents/scripts/verify-readme.sh`)**: Intercepts command-execution tools (such as staging, commits, or pushes inside `agy` sessions).
-*   **Compliance Block**: If changes are detected in core configurations (such as `agents/`, `.agents/plugins/`, `install.sh`, or `bootstrap.py`) compared to `origin/main` but `README.md` is **not updated**, the hook outputs a high-consequence panel and halts the tool execution!
+*   **Compliance Block**: If changes are detected in core configurations (such as `agents/`, `install.sh`, or `bootstrap.py`) compared to `origin/main` but `README.md` is **not updated**, the hook outputs a high-consequence panel and halts the tool execution!
 
 ---
 
