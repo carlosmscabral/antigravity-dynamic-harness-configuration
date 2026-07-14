@@ -69,9 +69,10 @@ As your very first step upon entering any workspace, you must **silently scan th
 When proposing the harness configuration, you **must always evaluate and suggest relevant entries** from this pre-cataloged list of industry-standard tools depending on your static analysis:
 
 ### 1. Custom Specialty Plugins (Staged in `.agents/plugins_cache/`)
-*   **`standard-harness`** *(General Stack)*: Standard SDLC rules (testing conventions, documentation), formatting linter execution, and the `refactoring-expert` subagent.
+*   **`standard-harness`** *(General Stack)*: Enforces Spec-Driven Development (SDD). Deploys **Dynamic Developer Personas** powered by Antigravity file-match triggers (Architect on `specs/**`, Builder on source code, Writer on docs) and mandates YAML-formatted spec structures (PRD, API Contracts, Data Models, Integration Flows, Security/Compliance, and Evaluations) to optimize token parsing accuracy (51.9% accuracy).
 *   **`strict-banking-harness`** *(Enterprise Security)*: High-security air-gap rules, dependency scanning rules, curl/wget blocking hooks, and `crypto-auditor` subagents.
 *   **`adk-developer`** *(Google ADK & Cloud Run)*: Dedicated environment for Google Agent Development Kit (ADK) development. Enforces pre-flight Pydantic schema validation, documentation grounding (ADK/GCP Docs), ADK source inspection, patterns replication from `adk-samples` repository, and Google skills integration.
+
 
 ### 2. Well-Known Skills (Trigger on Tech Stack / Goals)
 *   `git-commit-formatter` *(All Projects)*: Formats git commit messages according to Conventional Commits specifications.
