@@ -47,7 +47,7 @@ unzip -q -o "$TEMP_ZIP"
 # Establish target directories
 echo -e "[DHC] Provisioning local workspace structures..."
 mkdir -p .agents/agents
-mkdir -p .agents/plugins
+mkdir -p .agents/plugins_cache
 
 # Clean up any legacy, flat harness-configurator.md file from previous versions
 rm -f .agents/agents/harness-configurator.md
@@ -58,16 +58,16 @@ if [ -d "$EXTRACT_DIR/agents" ]; then
     cp -R "$EXTRACT_DIR/agents/" .agents/agents/
 fi
 
-
-# Copy all plugins dynamically
-echo -e "[DHC] Moving customization library plugins recursively..."
+# Copy all plugins dynamically to the inactive cache folder
+echo -e "[DHC] Staging customization library plugins in cache recursively..."
 if [ -d "$EXTRACT_DIR/.agents/plugins" ]; then
-    cp -R "$EXTRACT_DIR/.agents/plugins/" .agents/plugins/
+    cp -R "$EXTRACT_DIR/.agents/plugins/" .agents/plugins_cache/
 fi
 
-# Make any scripts inside plugins executable
-echo -e "[DHC] Enforcing execution permissions on plugin scripts..."
-find .agents/plugins/ -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
+# Make any scripts inside cached plugins executable
+echo -e "[DHC] Enforcing execution permissions on plugin scripts in cache..."
+find .agents/plugins_cache/ -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
+
 
 # Cleanup temp files
 echo -e "[DHC] Cleaning up temporary download caches..."

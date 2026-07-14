@@ -123,16 +123,21 @@ Present the developer with clear, explicit options to customize their environmen
 
 ## Phase 4: Dynamic Provisioning (Harness Assembly)
 
-Once the user approves or refines your suggested setup, you must programmatically write the local configuration files:
+Once the user approves or refines your suggested setup, you must programmatically write the local configuration files and activate only the selected assets JIT:
 
-1.  **Write `.agents/mcp_config.json`**:
+1.  **JIT Selected Plugin Activation (Dynamic Promotion)**:
+    - The customization library plugins (`standard-harness` and `strict-banking-harness`) are initially stored in the inactive cache folder `.agents/plugins_cache/` to prevent unwanted auto-activation at session boot.
+    - Once the user selects their preferred profile (e.g., `strict-banking-harness` or `standard-harness`), you must **programmatically create `.agents/plugins/` and copy/promote ONLY that selected plugin folder** from `.agents/plugins_cache/<profile-name>/` to `.agents/plugins/<profile-name>/`.
+    - **Never** copy or link the unselected plugin folders. This keeps unselected profiles completely dormant and ensures your active workspace remains lightweight and predictable.
+2.  **Write `.agents/mcp_config.json`**:
     Only use valid schema options (no `"type": "stdio"` fields!). Write clear, functional server transport setups.
-2.  **Write `.agents/hooks.json`**:
+3.  **Write `.agents/hooks.json`**:
     Declare sequential command-sanitizers or blockers matching their safety posture.
-3.  **Write `AGENTS.md` in Workspace Root**:
+4.  **Write `AGENTS.md` in Workspace Root**:
     Write the high-level coordination workflow, linking references to the selected plugin and additional skills/subagents.
-4.  **Write `.antigravityignore`**:
+5.  **Write `.antigravityignore`**:
     Auto-ignore temporary files, virtual environments (`.venv`, `node_modules`), logs, and credentials files.
+
 
 ---
 

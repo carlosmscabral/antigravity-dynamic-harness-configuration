@@ -43,7 +43,7 @@ def bootstrap():
     
     # 2. Establish target agent folders
     target_agents_dir = target_dir / ".agents" / "agents" / "harness-configurator"
-    target_plugins_dir = target_dir / ".agents" / "plugins"
+    target_plugins_dir = target_dir / ".agents" / "plugins_cache"
     
     print(f"{GREEN}[DHC] Provisioning local workspace gates at .agents/...{RESET}")
     target_agents_dir.mkdir(parents=True, exist_ok=True)
@@ -67,10 +67,10 @@ def bootstrap():
 
 
     
-    # 4. Deploy standard/strict ACL Plugins
+    # 4. Deploy standard/strict ACL Plugins inside Cache folder
     src_plugins = src_dir / ".agents" / "plugins"
     if src_plugins.exists():
-        print(f"{GREEN}[DHC] Linking customization library plugins...{RESET}")
+        print(f"{GREEN}[DHC] Staging customization library plugins in cache...{RESET}")
         for plugin_folder in src_plugins.iterdir():
             if plugin_folder.is_dir():
                 target_plugin = target_plugins_dir / plugin_folder.name
@@ -83,11 +83,11 @@ def bootstrap():
                 # We use symlinking for rapid, live updates during developer runs
                 try:
                     os.symlink(plugin_folder, target_plugin)
-                    print(f"      - Symlinked: {plugin_folder.name} -> .agents/plugins/{plugin_folder.name}")
+                    print(f"      - Symlinked: {plugin_folder.name} -> .agents/plugins_cache/{plugin_folder.name}")
                 except Exception as e:
                     # Fallback to copy if symlinking not supported/permitted
                     shutil.copytree(plugin_folder, target_plugin)
-                    print(f"      - Copied: {plugin_folder.name} -> .agents/plugins/{plugin_folder.name}")
+                    print(f"      - Copied: {plugin_folder.name} -> .agents/plugins_cache/{plugin_folder.name}")
     else:
         print(f"{YELLOW}[DHC WARNING] No central plugins folder discovered at {src_plugins}.{RESET}")
         
