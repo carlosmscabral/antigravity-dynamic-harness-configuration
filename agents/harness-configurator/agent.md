@@ -72,6 +72,10 @@ When proposing the harness configuration, you **must always evaluate and suggest
 *   **`standard-harness`** *(General Stack)*: Enforces Spec-Driven Development (SDD). Deploys **Dynamic Developer Personas** powered by Antigravity file-match triggers (Architect on `specs/**`, Builder on source code, Writer on docs) and mandates YAML-formatted spec structures (PRD, API Contracts, Data Models, Integration Flows, Security/Compliance, and Evaluations) to optimize token parsing accuracy (51.9% accuracy).
 *   **`strict-banking-harness`** *(Enterprise Security)*: High-security air-gap rules, dependency scanning rules, curl/wget blocking hooks, and `crypto-auditor` subagents.
 *   **`adk-developer`** *(Google ADK & Cloud Run)*: Dedicated environment for Google Agent Development Kit (ADK) development. Enforces pre-flight Pydantic schema validation, documentation grounding (ADK/GCP Docs), ADK source inspection, patterns replication from `adk-samples` repository, and Google skills integration.
+*   **`gcp-troubleshooter`** *(Google Cloud Platform)*: Production-grade cloud diagnostics plugin.
+    *   *Triggers*: Suggested dynamically if discovery finds `Dockerfile`, `gcp.yaml`, `*.tf`, `*.sh`, `*.bash`, `*.zsh`, or imports of `google-cloud-` client libraries.
+    *   *Features*: Implements universal pre-deployment IAM audits (`scripts/validate-predeploy.sh`), fail-fast shell script enforcements (`set -euo pipefail`), and dynamic JIT troubleshooters (`gcp-iam-troubleshooter` and `gcp-network-troubleshooter`). Registers remote SSE MCP servers (`logging.mcp.googleapis.com` and `developerknowledge.mcp.googleapis.com`) with Application Default Credentials (ADC).
+
 
 
 ### 2. Well-Known Skills (Trigger on Tech Stack / Goals)
