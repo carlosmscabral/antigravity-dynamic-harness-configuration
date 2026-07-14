@@ -62,11 +62,16 @@ As your very first step upon entering any workspace, you must **silently scan th
 
 ---
 
-## Phase 2: Core Customizations Catalog (Well-Known Skills & Enterprise Sources)
+## Phase 2: Core Customizations Catalog (Modular Plugins, Skills & Sources)
 
 When proposing the harness configuration, you **must always evaluate and suggest relevant entries** from this pre-cataloged list of industry-standard tools depending on your static analysis:
 
-### 1. Well-Known Skills (Trigger on Tech Stack / Goals)
+### 1. Custom Specialty Plugins (Staged in `.agents/plugins_cache/`)
+*   **`standard-harness`** *(General Stack)*: Standard SDLC rules (testing conventions, documentation), formatting linter execution, and the `refactoring-expert` subagent.
+*   **`strict-banking-harness`** *(Enterprise Security)*: High-security air-gap rules, dependency scanning rules, curl/wget blocking hooks, and `crypto-auditor` subagents.
+*   **`adk-developer`** *(Google ADK & Cloud Run)*: Dedicated environment for Google Agent Development Kit (ADK) development. Enforces pre-flight Pydantic schema validation, documentation grounding (ADK/GCP Docs), ADK source inspection, patterns replication from `adk-samples` repository, and Google skills integration.
+
+### 2. Well-Known Skills (Trigger on Tech Stack / Goals)
 *   `git-commit-formatter` *(All Projects)*: Formats git commit messages according to Conventional Commits specifications.
 *   `a11y-debugging` *(Web/Frontend)*: Audits semantic HTML, ARIA labels, focus states, tap targets, and color contrast.
 *   `debug-optimize-lcp` *(Web/Frontend)*: Guides debugging and optimizing Largest Contentful Paint (LCP) performance.
@@ -74,9 +79,8 @@ When proposing the harness configuration, you **must always evaluate and suggest
 *   `pytest-linter` *(Python)*: Automatically executes Black/Ruff before running tests via pytest.
 *   `sec-auditor` *(Banking/Security)*: Audits files for leaked secrets, subprocess injection vectors, and lock hashes.
 
-### 2. Enterprise Source Repositories & Integrations (Default Sources)
+### 3. Enterprise Source Repositories & Integrations (Default Sources)
 When scanning, you must check for indicators of these specialized GCP and agent-building frameworks and suggest JIT checking, downloading, or configuring these sources:
-
 *   **Google Cloud Platform (GCP) Skills**:
     *   *Trigger*: Detection of `gcloud`, Cloud Run, Cloud Functions, BigQuery, or GKE dependencies.
     *   *Source Repo*: `https://github.com/google/skills`
@@ -85,16 +89,6 @@ When scanning, you must check for indicators of these specialized GCP and agent-
     *   *Trigger*: Recommended for all enterprise development.
     *   *Source API*: `https://developerknowledge.googleapis.com/mcp`
     *   *Action*: Suggest registering this secure Google Docs provider as an MCP server inside `.agents/mcp_config.json` to grant the coding agent direct, real-time access to Google's master developer guidelines.
-*   **ADK (Agent Development Kit) Development**:
-    *   *Trigger*: Detection of `google-genai`, ADK imports, or `agent` definitions in Python/JS.
-    *   *Source Repo*: `https://github.com/google/agents-cli`
-    *   *Action*: Suggest cloning the CLI guides, validation rules, and templates from the ADK repository to build and test ADK-native agents.
-    *   *Coding Agent Hint*: When creating or configuring an ADK agent, explicitly add a guideline inside the generated root `AGENTS.md` instructing the coding agent to **look for, clone, and model similar implementations inside the official Google ADK Samples repository at:** `https://github.com/google/adk-samples/tree/main/python` (this serves as a premium, highly practical design template for writing ADK agent code).
-
-*   **GE CX / Agent Studio (Dialogflow CX) Development**:
-    *   *Trigger*: Detection of Dialogflow, Agent Studio, CX integrations, or `scrapi` references.
-    *   *Source Repo*: `https://github.com/GoogleCloudPlatform/cxas-scrapi`
-    *   *Action*: Suggest downloading or referencing helper libraries and scrap-based automation modules from the CXAS SCRAPI repository for rapid conversational building.
 
 ---
 
@@ -107,15 +101,16 @@ Once the discovery phase is complete, present the developer with a beautifully f
 Provide a clean summary of what you discovered:
 - **Detected Language/Framework**: e.g., Python (FastAPI).
 - **Detected Infrastructure / Deployments**: e.g., Google Cloud Client libraries or ADK orchestration modules.
-- **Pre-suggested Harness Profile**: e.g., `standard-harness` with automatic Python linter hooks.
+- **Pre-suggested Custom Plugins**: e.g., `standard-harness` and `adk-developer` (dynamically suggested if ADK indicators are found!).
 - **Proactively Proposed Skills & Enterprise Sources**: e.g., Propose `pytest-linter` skill and registering the Google Developer Knowledge MCP.
 
 ### 2. Interview & Selection Panel
 Present the developer with clear, explicit options to customize their environment. Inform them that they can select, customize, or type their preferences:
 
-- **Harness Compliance Level**:
-  - `standard-harness` (Default): Pre-configured rules (documentation, testing conventions), linter hooks, and the `refactoring-expert` subagent.
-  - `strict-banking-harness`: Strict security. Air-gapped rules (secrets, air gap), network blocks, curl/wget blocking hooks, and `crypto-auditor` subagent.
+- **Harness Compliance Level & Custom Plugins**:
+  - `standard-harness` (Default): Base SDLC conventions and standard subagents.
+  - `strict-banking-harness`: Hardened air-gapped security perimeter.
+  - `adk-developer` (Auto-selected if ADK triggers): Custom ADK rules, pre-flight Pydantic schema validation, and samples templates cloning guides.
 - **Enterprise Source Repositories & Integrations**: (Suggest matches from our Core Catalog).
 - **Additional Skills**: (Suggest matches from our Core Catalog).
 
@@ -126,8 +121,8 @@ Present the developer with clear, explicit options to customize their environmen
 Once the user approves or refines your suggested setup, you must programmatically write the local configuration files and activate only the selected assets JIT:
 
 1.  **JIT Selected Plugin Activation (Dynamic Promotion)**:
-    - The customization library plugins (`standard-harness` and `strict-banking-harness`) are initially stored in the inactive cache folder `.agents/plugins_cache/` to prevent unwanted auto-activation at session boot.
-    - Once the user selects their preferred profile (e.g., `strict-banking-harness` or `standard-harness`), you must **programmatically create `.agents/plugins/` and copy/promote ONLY that selected plugin folder** from `.agents/plugins_cache/<profile-name>/` to `.agents/plugins/<profile-name>/`.
+    - The customization library plugins (e.g., `standard-harness`, `strict-banking-harness`, and `adk-developer`) are initially stored in the inactive cache folder `.agents/plugins_cache/` to prevent unwanted auto-activation at session boot.
+    - Once the user selects their preferred profile or specialty plugins (e.g., electing `standard-harness` + `adk-developer` for an ADK project), you must **programmatically create `.agents/plugins/` and copy/promote ONLY those selected plugin folders** from `.agents/plugins_cache/<plugin-name>/` to `.agents/plugins/<plugin-name>/`.
     - **Never** copy or link the unselected plugin folders. This keeps unselected profiles completely dormant and ensures your active workspace remains lightweight and predictable.
 2.  **Write `.agents/mcp_config.json`**:
     Only use valid schema options (no `"type": "stdio"` fields!). Write clear, functional server transport setups.
