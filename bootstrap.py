@@ -46,6 +46,18 @@ def bootstrap():
     target_plugins_dir = target_dir / ".agents" / "plugins_cache"
     
     print(f"{GREEN}[DHC] Provisioning local workspace gates at .agents/...{RESET}")
+    # Clean target folders to prevent stale ghost files
+    if target_agents_dir.exists():
+        shutil.rmtree(target_agents_dir)
+    if target_plugins_dir.exists():
+        # Safely remove files/symlinks or directory trees
+        for item in target_plugins_dir.iterdir():
+            if item.is_symlink() or item.is_file():
+                item.unlink()
+            else:
+                shutil.rmtree(item)
+        target_plugins_dir.rmdir()
+
     target_agents_dir.mkdir(parents=True, exist_ok=True)
     target_plugins_dir.mkdir(parents=True, exist_ok=True)
     

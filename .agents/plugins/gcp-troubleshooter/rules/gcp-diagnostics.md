@@ -11,7 +11,7 @@ You are editing, reviewing, or constructing Google Cloud Platform deployment con
 - Before suggesting or executing any code or configuration changes to resolve an error, you **must first query and pull live container log entries** (using the remote Cloud Logging MCP server or `gcloud logging read`) to extract concrete stack traces.
 
 ### 2. Pre-Deployment IAM Auditing & Validation Gate
-- You are **STRICTLY FORBIDDEN** from running any deployment CLI commands (e.g., `gcloud run deploy`, `agents-cli deploy`) without first executing the pre-flight auditing script `scripts/validate-predeploy.sh` bundled inside this plugin.
+- You are **STRICTLY FORBIDDEN** from running any deployment CLI commands (e.g., `gcloud run deploy`, `agents-cli deploy`) without first executing the pre-flight auditing script `.agents/plugins/gcp-troubleshooter/scripts/validate-predeploy.sh` bundled inside this plugin.
 - If the script outputs any warning or failure, you must halt execution, construct a structured risk assessment table representing the missing permissions, and await explicit developer authorization before proceeding.
 
 ### 3. Basic IAM Troubleshooting Directives

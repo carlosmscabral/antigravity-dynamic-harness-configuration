@@ -1,0 +1,3 @@
+# Local configuration and runtime caches created by bootstrap.py
+.agents/agents/
+.agents/plugins_cache/

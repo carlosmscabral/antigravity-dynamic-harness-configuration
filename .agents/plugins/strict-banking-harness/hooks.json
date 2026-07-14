@@ -6,7 +6,7 @@
         "matcher": "run_command",
         "hooks": [
           {
-            "command": "./scripts/command-blocker.sh",
+            "command": ".agents/plugins/strict-banking-harness/scripts/command-blocker.sh",
             "timeout": 10
           }
         ]

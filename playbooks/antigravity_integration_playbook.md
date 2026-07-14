@@ -304,7 +304,7 @@ cd temp_pizza_project
 ### Step 2: Run the zero-dependency Bootstrap Installer
 Run the central customizations library installer inside your project root. This prepares your directory for the interactive setup chat:
 ```bash
-python3 /path/to/cloned/antigravity-okf-customizations/bootstrap.py
+python3 /path/to/cloned/antigravity-dynamic-harness-configuration/bootstrap.py
 ```
 *This programmatically creates `.agents/agents/`, deploys our specialized Harness Configurator Agent prompt, and symlinks your standard and strict banking plugins under `.agents/plugins/` in one command.*
 

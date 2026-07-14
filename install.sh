@@ -3,7 +3,7 @@
 # Dynamically installs the latest DHC and plugins without cloning or hardcoding file names.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/carlosmscabral/antigravity-okf-customizations/main/install.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/carlosmscabral/antigravity-dynamic-harness-configuration/main/install.sh | bash
 
 set -e
 
@@ -35,8 +35,8 @@ fi
 
 # Define temp download targets
 TEMP_ZIP="dhc_archive.zip"
-EXTRACT_DIR="antigravity-okf-customizations-main"
-REPO_ZIP_URL="https://github.com/carlosmscabral/antigravity-okf-customizations/archive/refs/heads/main.zip"
+EXTRACT_DIR="antigravity-dynamic-harness-configuration-main"
+REPO_ZIP_URL="https://github.com/carlosmscabral/antigravity-dynamic-harness-configuration/archive/refs/heads/main.zip"
 
 echo -e "[DHC] Fetching latest customization assets archive from GitHub..."
 curl -fsSL -o "$TEMP_ZIP" "$REPO_ZIP_URL"
@@ -46,6 +46,10 @@ unzip -q -o "$TEMP_ZIP"
 
 # Establish target directories
 echo -e "[DHC] Provisioning local workspace structures..."
+# Clean existing targets first to prevent ghost files
+rm -rf .agents/agents/harness-configurator
+rm -rf .agents/plugins_cache
+
 mkdir -p .agents/agents
 mkdir -p .agents/plugins_cache
 

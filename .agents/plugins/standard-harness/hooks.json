@@ -6,7 +6,7 @@
         "matcher": "run_command",
         "hooks": [
           {
-            "command": "./scripts/pre-test.sh",
+            "command": ".agents/plugins/standard-harness/scripts/pre-test.sh",
             "timeout": 15
           }
         ]

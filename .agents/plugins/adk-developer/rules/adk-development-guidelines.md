@@ -20,6 +20,7 @@ You are operating inside a workspace configured with the **ADK Developer Plugin*
 ### 3. Documentation & Code Grounding
 - **Primary Source Grounding**: Ground all architectural decisions on the official ADK and GCP documentation.
 - **Developer Knowledge MCP**: If the `google-developer-knowledge` MCP server is active, always use it to query real-time Google Docs, specifications, and authentication architectures.
+- **ADK Docs MCP Server**: If the `adk-docs-mcp` server is configured, leverage its tools (`list_doc_sources`, `fetch_docs`) to retrieve real-time classes, schemas, tutorials, and SDK specifications directly from `https://adk.dev/llms.txt`.
 - **ADK Source Inspection**: When dealing with advanced tool callbacks or complex execution states, look up and inspect the source code of the `agents-cli` or local SDK libraries directly to ensure correct function signatures.
 
 ### 4. Reference-First Implementation (ADK Samples)
