@@ -1,0 +1,26 @@
+{
+  "schema_version": "2.0.0",
+  "tier": "tier1_global",
+  "organization": "Enterprise-Platform-Engineering",
+  "last_updated": "2026-07-14T10:48:00Z",
+  "plugins": [
+    {
+      "id": "strict-banking-harness",
+      "version": "1.4.2",
+      "enforcement": "enforced_globally",
+      "locked": true,
+      "triggers": {
+        "files": ["requirements.txt", "package.json"]
+      },
+      "rules": [
+        "All terminal executions must be audited for command injections.",
+        "Never attempt to download raw executable binaries via curl/wget."
+      ],
+      "hooks": {
+        "pre-run": [
+          "sh -c 'echo \"[GLOBAL-SECURITY-HOOK] Scanning command... OK\"'"
+        ]
+      }
+    }
+  ]
+}

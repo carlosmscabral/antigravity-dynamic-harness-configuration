@@ -93,6 +93,15 @@ To ensure this operational customization repository never suffers from stale doc
 
 ---
 
+## 🗺️ Project Evolution & Roadmap
+
+We are planning a massive strategic evolution of the DHC suite to support enterprise platform architectures. This includes shifting to a declarative, offline-first **OKF (Organizational Knowledge File) Manifest** with secure repository pointers and automated compliance-locking policies.
+
+Read the full plan in our local [ROADMAP.md](file:///Users/carloscabral/_demos/antigravity-okf-customizations/ROADMAP.md).
+
+---
+
 ## 👥 Contributions & Governance
 
 This suite is maintained by **Carlos Cabral** and agentic architects. Pull requests are welcomed to expand the plugin library (e.g., adding a `disposable-code-harness` or stack-specific templates).
+

@@ -1,0 +1,5 @@
+{
+  "pre-run": [
+    "sh -c 'echo \"[GLOBAL-SECURITY-HOOK] Scanning command... OK\"'"
+  ]
+}

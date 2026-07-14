@@ -1,0 +1,7 @@
+# Antigravity default ignore
+*.pyc
+__pycache__/
+*.log
+.git/
+.env
+*.db

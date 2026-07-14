@@ -1,0 +1,33 @@
+{
+  "schema_version": "2.0.0",
+  "tier": "tier2_group",
+  "group_id": "wealth-management",
+  "inherits_from": "corp-global",
+  "last_updated": "2026-07-14T10:48:00Z",
+  "plugins": [
+    {
+      "id": "wealth-db-mcp",
+      "version": "0.9.1",
+      "enforcement": "suggested",
+      "locked": false,
+      "triggers": {
+        "files": ["database.yaml"]
+      },
+      "rules": [
+        "Always use the local postgres MCP for database queries."
+      ]
+    },
+    {
+      "id": "standard-styling",
+      "version": "1.0.0",
+      "enforcement": "suggested",
+      "locked": false,
+      "triggers": {
+        "files": ["*.py", "*.js"]
+      },
+      "rules": [
+        "Enforce 100% compliance with corporate styling."
+      ]
+    }
+  ]
+}
