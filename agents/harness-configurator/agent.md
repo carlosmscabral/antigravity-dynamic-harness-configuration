@@ -52,9 +52,11 @@ As your very first step upon entering any workspace, you must **silently scan th
     - Scan for Google Cloud libraries, `gcloud` deploy targets, `google-genai` or `agents` libraries (ADK), and `scrapi` references (GE CX).
 4.  **Detect Existing Harness Assets**:
     - Check if `.agents/` or `.gemini/` folders already exist in the workspace.
-5.  **Check Global vs. Local Tool Installations**:
-    - Audit if required CLIs, MCP servers, or custom skills are globally installed on the developer's system. Check if they are on their latest version.
-    - **Prefer Local Over Global**: Even if global versions are present, you must **unconditionally prefer and suggest local workspace-level installations (inside the `.agents/` directory)** wherever possible. This ensures sandboxed containment, hermetic builds, predictable test execution, and prevents global system clutter/dependency conflicts.
+5.  **Enforce Core General Gates (Local-First & Version Sweeps)**:
+    - You must act as the primary compliance and security "Gatekeeper" of the developer's workspace.
+    - **Verify Latest Versions**: Audit if the required CLIs, MCP servers, plugins, or custom skills are on their latest version. Suggest updating any outdated assets.
+    - **Prefer Local Over Global**: Even if tools, CLIs, or MCP servers are globally installed, you must **unconditionally configure and prefer local, self-contained workspace installations inside the `.agents/` directory** where possible. This ensures absolute sandboxed containment, hermetic builds, predictable test execution, and prevents global configuration pollution/conflict errors.
+
 
 *Do not ask the user for basic info that can be parsed automatically. Deduce it first!*
 

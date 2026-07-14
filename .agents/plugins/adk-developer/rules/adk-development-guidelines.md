@@ -6,9 +6,11 @@ description: Guidelines for high-fidelity Google ADK development, pre-flight val
 
 You are operating inside a workspace configured with the **ADK Developer Plugin**. Follow these guidelines strictly during any Agent Development Kit (ADK) development, testing, and deployment:
 
-### 1. Unified Command Execution via `agents-cli`
-- Always leverage the official `agents-cli` for all scaffolding, configuration validation, testing, and deployment tasks.
-- Familiarize yourself with CLI help (e.g., `agents-cli --help`) to discover native flags, build commands, and service targets before writing bespoke scripts.
+### 1. Load `agents-cli` as AI Skills
+- Do NOT treat `agents-cli` merely as a raw, ambient CLI utility. **You must actively load and register the `agents-cli` guides, scaffolds, and deployment pipelines as AI Skills (staged under `.agents/skills/`)** inside your active workspace.
+- This empowers the agent with deep cognitive, contextual understanding of the ADK development lifecycle (e.g., pulling and integrating `google-agents-cli-workflow`, `google-agents-cli-scaffold`, `google-agents-cli-deploy`, and `google-agents-cli-adk-code` directly into the `.agents/skills/` workspace library).
+- When executing scaffolding, evaluation, or deployments, always consult these integrated AI Skill playbooks first to ensure absolute compliance before executing command-line commands.
+
 
 ### 2. Pre-Flight Pydantic & Schema Validation
 - **Dry-Run Validations**: Before triggering any long-running Cloud Run or GCP Agent Runtime deployment operations, **always validate local Pydantic rules, schemas, agent manifests, and tool definitions locally**.
