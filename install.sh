@@ -68,9 +68,10 @@ if [ -d "$EXTRACT_DIR/.agents/plugins" ]; then
     cp -R "$EXTRACT_DIR/.agents/plugins/" .agents/plugins_cache/
 fi
 
-# Make any scripts inside cached plugins executable
-echo -e "[DHC] Enforcing execution permissions on plugin scripts in cache..."
-find .agents/plugins_cache/ -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
+# Make any scripts inside the harness and cached plugins executable
+echo -e "[DHC] Enforcing execution permissions on scripts..."
+find .agents/ -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
+find .agents/ -name "*.py" -exec chmod +x {} + 2>/dev/null || true
 
 
 # Cleanup temp files

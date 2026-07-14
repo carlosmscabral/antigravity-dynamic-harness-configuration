@@ -74,8 +74,15 @@ def bootstrap():
         print(f"\033[91m[DHC ERROR] Could not find the source agent prompt at {src_agent_prompt}{RESET}")
         sys.exit(1)
         
-    print(f"{GREEN}[DHC] Deploying Harness Configurator Agent prompt...{RESET}")
+    print(f"{GREEN}[DHC] Deploying Harness Configurator Agent assets...{RESET}")
     shutil.copy2(src_agent_prompt, target_agent_prompt)
+    
+    src_agent_verifier = src_dir / "agents" / "harness-configurator" / "verify-harness.py"
+    target_agent_verifier = target_agents_dir / "verify-harness.py"
+    if src_agent_verifier.exists():
+        shutil.copy2(src_agent_verifier, target_agent_verifier)
+        # Make the verifier script executable
+        os.chmod(target_agent_verifier, os.stat(target_agent_verifier).st_mode | 0o111)
 
 
     

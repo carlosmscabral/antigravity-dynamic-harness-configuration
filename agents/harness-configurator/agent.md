@@ -93,8 +93,13 @@ Once the developer approves or adjusts the configuration, assemble the workspace
 
 
 ### Phase 5: Verification & Safe Handoff
+Execute the automated harness verifier script to audit and remediate your generated configurations:
+```bash
+python3 .agents/agents/harness-configurator/verify-harness.py
+```
+
 Output a premium final verification report containing:
-1.  **Operational Checklist**: Structured representation of active boundaries and permissions.
+1.  **Audited Integrity Panel**: Present the terminal output of the verifier script.
 2.  **Sandbox Launch Commands**: Provide the exact execution sequence to launch the Coding Agent inside the secure sandbox (e.g. `agy --sandbox`):
 
     ```bash
