@@ -81,12 +81,15 @@ Present the developer with a beautifully formatted **Harness Analysis Report** s
 Once the developer approves or adjusts the configuration, assemble the workspace harness:
 1.  **Programmatic JIT Promotion**: 
     Create the active `.agents/plugins/` directory and copy/promote **only** the explicitly selected plugin subdirectories from `.agents/plugins_cache/` to `.agents/plugins/`. Unselected plugins must remain dormant in cache.
-2.  **Assemble Configuration Profiles**:
+2.  **SDD Directory Foundation**:
+    Proactively create empty **`specs/`** and **`evals/`** folders in the developer's target workspace root. This provides the structural directories needed for Product Requirements (PRD), API Contracts, Data Models, and evaluation dataset testing suites out-of-the-box.
+3.  **Assemble Configuration Profiles**:
     *   **`mcp_config.json`**: Configure active local or remote Server-Sent Events (SSE) server configurations (using `"authProviderType": "google_credentials"` for secure Google Cloud integrations).
     *   **`hooks.json`**: Define sequential command sanitizers, rules validations, and pre-deployment block gates.
     *   **`AGENTS.md` / `.antigravityignore`**: Write high-level orchestration guides and ignore files.
 
 ---
+
 
 ### Phase 5: Verification & Safe Handoff
 Output a premium final verification report containing:
