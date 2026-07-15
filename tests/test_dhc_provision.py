@@ -116,6 +116,10 @@ class DhcProvisionTest(unittest.TestCase):
         self.assertEqual(r["mode"], "default")
         self.assertEqual(r["plugins"]["alpha"]["hookGroups"], [])
         self.assertEqual(r["plugins"]["alpha"]["createdPaths"], [".agents/plugins/alpha"])
+        # default-mode plugin hook command is absolutized so it resolves regardless of CWD
+        dcmd = self._json(".agents/plugins/alpha/hooks.json")["alpha-hook"]["preToolUse"][0]["hooks"][0]["command"]
+        self.assertTrue(os.path.isabs(dcmd), dcmd)
+        self.assertTrue(os.path.exists(dcmd))
 
     # ── T3 flatten + hook-path bug fix ──
     def test_T3_flatten(self):
@@ -126,8 +130,9 @@ class DhcProvisionTest(unittest.TestCase):
         self.assertTrue(os.access(script, os.X_OK))
         hooks = self._json(".agents/hooks.json")
         cmd = hooks["alpha-hook"]["preToolUse"][0]["hooks"][0]["command"]
-        self.assertEqual(cmd, ".agents/scripts/alpha/a.sh")
-        self.assertTrue(os.path.exists(self.path(cmd)))  # rewritten path resolves
+        self.assertTrue(os.path.isabs(cmd), cmd)                       # absolute (CWD-independent)
+        self.assertTrue(cmd.endswith("/.agents/scripts/alpha/a.sh"), cmd)
+        self.assertTrue(os.path.exists(cmd))                          # resolves directly
         mcp = self._json(".agents/mcp_config.json")
         self.assertIn("gamma-mcp", mcp["mcpServers"])
         r = self.load_receipt()

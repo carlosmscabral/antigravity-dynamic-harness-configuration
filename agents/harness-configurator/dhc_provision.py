@@ -228,12 +228,10 @@ def materialize_skills(skills, skills_cache, dest_dir):
     return created
 
 
-def rewrite_hook_paths(node, name):
-    """Return a copy of the hooks dict with '.agents/plugins/<name>/scripts/' command
-    prefixes rewritten to '.agents/scripts/<name>/' (flatten scripts destination)."""
-    old = f".agents/plugins/{name}/scripts/"
-    new = f".agents/scripts/{name}/"
-
+def rewrite_hook_paths(node, old, new):
+    """Return a copy of the hooks dict with any `command` string's `old` prefix replaced by
+    `new`. Used to point hook commands at ABSOLUTE script locations, which resolve regardless
+    of the working directory Antigravity runs hooks from (relative paths do not)."""
     def walk(n):
         if isinstance(n, dict):
             return {k: (v.replace(old, new) if k == "command" and isinstance(v, str) else walk(v))
@@ -253,6 +251,15 @@ def provision_default(name, comps, paths, quiet=False):
         os.makedirs(skills_dest, exist_ok=True)
         materialize_skills(comps["skills"], paths.skills_cache, skills_dest)
     chmod_scripts(target)
+    # Absolutize the copied plugin's hook command paths so they resolve regardless of the
+    # hook working directory (relative `.agents/...` paths fail — see the flatten fix).
+    tgt_hooks = os.path.join(target, "hooks.json")
+    if os.path.isfile(tgt_hooks):
+        data = merge_config._load(tgt_hooks)
+        if data:
+            old = f".agents/plugins/{name}/scripts/"
+            new = os.path.join(paths.root, ".agents", "plugins", name, "scripts") + "/"
+            merge_config._save(tgt_hooks, rewrite_hook_paths(data, old, new))
     _log(f"  [default] .agents/plugins/{name} ({len(comps['skills'])} skills)", quiet)
     return {"version": comps["version"],
             "createdPaths": [f".agents/plugins/{name}"],
@@ -288,7 +295,9 @@ def provision_flatten(name, comps, paths, quiet=False):
     hook_groups = []
     if comps["hooks"]:
         src = merge_config._load(comps["hooks"]) or {}
-        rewritten = rewrite_hook_paths(src, name)
+        old = f".agents/plugins/{name}/scripts/"
+        new = os.path.join(paths.root, ".agents", "scripts", name) + "/"
+        rewritten = rewrite_hook_paths(src, old, new)
         added = merge_config.merge_hooks_data(rewritten, paths.hooks)
         hook_groups = sorted(added)
         for g in src.keys():
