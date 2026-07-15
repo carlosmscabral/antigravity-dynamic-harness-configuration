@@ -96,6 +96,13 @@ def verify_harness():
             warnings_count += 1
         if not receipt.get("plugins"):
             print(f"  {YELLOW}[-] Receipt records no provisioned plugins.{RESET}")
+        if receipt.get("sdd"):
+            sj = _read_json(os.path.join(agents_dir, "settings.json")) or {}
+            if sj.get("agentMode") == "plan":
+                print(f"  {GREEN}[✓]{RESET} SDD enforced: .agents/settings.json → agentMode=plan (plan-approval gate)")
+            else:
+                print(f"  {RED}[✗]{RESET} SDD requested but .agents/settings.json agentMode is not 'plan'")
+                errors_count += 1
     else:
         # Fallback: directory inference (no receipt / pre-1.1 workspace)
         plugins_dir = os.path.join(agents_dir, "plugins")

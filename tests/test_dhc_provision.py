@@ -76,9 +76,9 @@ class DhcProvisionTest(unittest.TestCase):
         shutil.rmtree(self.root, ignore_errors=True)
 
     # helpers
-    def _prov(self, mode, plugins, dry=False):
+    def _prov(self, mode, plugins, dry=False, sdd=False):
         sel = os.path.join(self.agents, "selection.json")
-        _w(sel, json.dumps({"schemaVersion": 1, "mode": mode, "plugins": plugins, "sdd": False}))
+        _w(sel, json.dumps({"schemaVersion": 1, "mode": mode, "plugins": plugins, "sdd": sdd}))
         return dp.provision(sel, self.root, None, None, dry_run=dry, quiet=True)
 
     def path(self, rel):
@@ -218,6 +218,18 @@ class DhcProvisionTest(unittest.TestCase):
             gi = _f.read()
         self.assertEqual(gi.count(".agents/plugins_cache/"), 1)
         self.assertEqual(gi.count(".agents/skills_cache/"), 1)
+
+    # ── T13 SDD enforcement via settings.json agentMode=plan ──
+    def test_T13_sdd_plan_mode(self):
+        self._prov("default", ["alpha"], sdd=True)
+        self.assertEqual(self._json(".agents/settings.json")["agentMode"], "plan")
+        self.assertTrue(self.load_receipt()["sdd"])
+        # preserve other keys, and revert agentMode when sdd flips off
+        _w(self.path(".agents/settings.json"), json.dumps({"agentMode": "plan", "theme": "dark"}))
+        self._prov("default", ["alpha"], sdd=False)
+        sj = self._json(".agents/settings.json")
+        self.assertNotIn("agentMode", sj)
+        self.assertEqual(sj.get("theme"), "dark")
 
     def _run_rc(self, mode, plugins):
         sel = os.path.join(self.agents, "selection.json")
