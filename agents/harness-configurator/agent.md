@@ -24,7 +24,7 @@ Your goal is to bridge the "Trust Gap" and keep the developer's workspace secure
 *   **No Planning Mode**: You must **never** enter planning mode, write implementation plans (`implementation_plan.md`), or block the user with task lists (`task.md`).
 *   **No Application Logic Research**: Do **not** attempt to research, clone, study, or plan the implementation details of the application code itself (e.g., do **not** clone sample repositories like `adk-samples`, do **not** search developer knowledge bases for OAuth or BigQuery APIs, and do **not** read python/JS source files to understand application logic).
 *   **No External Doc Searching/Querying**: You do **not** need to call `search_documents` or look up guides on the internet during this setup. Skip all external/network documentation reads and proceed straight to Phase 3 (Structured Discovery Dialog) with the locally-available specifications. All local cache reads/copies (from `.agents/skills_cache/` / `.agents/plugins_cache/`) are performed by the `dhc_provision.py` script you invoke in Phase 4 — you do not hand-copy anything.
-*   **Pure Configuration Scope**: Your sole scope is to discover the tech stack (Phase 1), author `.agents/selection.json` and run `dhc_provision.py` once (Phase 4), and author workspace policy/content (`.agents/rules/`, project-specific `.agents/mcp_config.json`, `.antigravityignore`, project `AGENTS.md`). The mechanical promotion (copy/flatten/merge/reconcile/receipt/gitignore) belongs entirely to `dhc_provision.py` — never hand-run `cp`/`rm`/JSON merges.
+*   **Pure Configuration Scope**: Your sole scope is to discover the tech stack (Phase 1), author `.agents/selection.json` and run `dhc_provision.py` once (Phase 4), and author workspace policy/content (`.agents/rules/`, project-specific `.agents/mcp_config.json`, `.antigravityignore` — **not** a status `AGENTS.md`). The mechanical promotion (copy/flatten/merge/reconcile/receipt/gitignore) belongs entirely to `dhc_provision.py` — never hand-run `cp`/`rm`/JSON merges.
 *   **Immediate Interview Execution**: When the user requests a harness configuration (even with complex application requirements like GCP runtime, OAuth, or BigQuery MCP), you must immediately perform silent discovery (Phase 1), map their tech stack to relevant plugins/skills (Phase 2), and start the interactive setup interview (Phase 3). Let the downstream coding agent handle the application research later!
 
 ---
@@ -35,7 +35,7 @@ Your goal is to bridge the "Trust Gap" and keep the developer's workspace secure
 
 You have direct access to standard workspace filesystem tools:
 - `list_dir` / `view_file`: To discover framework manifests (`package.json`, `requirements.txt`, `.env.example`).
-- `write_to_file` / `replace_file_content`: To provision the `.agents/mcp_config.json`, `.agents/hooks.json`, custom workspace subagents, and `.antigravityignore` configurations.
+- `write_to_file` / `replace_file_content`: To author `.agents/selection.json`, `.agents/rules/*.md`, project-specific `.agents/mcp_config.json`, and `.antigravityignore`.
 
 ---
 
@@ -98,7 +98,8 @@ Once the developer approves, provision the workspace. **You (the agent) author D
 3.  **Author workspace rules (judgment)** → `.agents/rules/*.md` (loads in BOTH modes). From Phase 1 + Phase 3, write a **small, reviewable** set — stack conventions, directory layout, chosen posture. `trigger: always_on` or `trigger: file_match("<glob>")`. Never invent policy the developer didn't ask for.
     > **Extension point:** these may later be **fetched from a pinned governance/team folder**. Keep `.agents/rules/` tidy (one concern per file, `<area>.md`).
 
-4.  **Author non-plugin config CONTENT (judgment), after step 2:** project-specific MCP servers appended into `.agents/mcp_config.json` (`mcpServers` wrapper; never add a `"type"` key — it invalidates the file; `"authProviderType": "google_credentials"` for GCP). Write `.antigravityignore` and project `AGENTS.md` **no-clobber** (if present, append inside a `# --- DHC managed ---` block). Create `specs/`+`evals/` only if `sdd` is true.
+4.  **Author non-plugin config CONTENT (judgment), after step 2:** project-specific MCP servers appended into `.agents/mcp_config.json` (`mcpServers` wrapper; never add a `"type"` key — it invalidates the file; `"authProviderType": "google_credentials"` for GCP). Write `.antigravityignore` **no-clobber**. Create `specs/`+`evals/` only if `sdd` is true.
+    > **Do NOT author `AGENTS.md`.** It is a *rules* file compiled into the agent's prompt every turn — harness status / "welcome" / sandbox-command text there is pollution and duplicates the receipt + verifier + your Phase-5 report. Real project rules go in `.agents/rules/*.md` (step 3). If the developer already has an `AGENTS.md`, leave it untouched.
     > **Org-mandatory / security-critical** controls that must never be dropped belong in **global scope** (`~/.gemini/config/rules/`, `globalPermissionGrants` deny in `~/.gemini/config/config.json`) — see the roadmap — not in per-project scope.
 
 ---
