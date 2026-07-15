@@ -85,41 +85,92 @@ global controls + team defaults + project opt-in**, pinned, signed, audited, and
 
 The model: a **Company Harness Repo** that mirrors the cabral-skills structure (`plugins/`,
 `skills/`, governance `rules/`) but adds a **policy layer**, identity-driven resolution,
-signing, enterprise distribution, controlled rollout, and audit.
+signing, enterprise distribution, controlled rollout, and audit — sitting on top of an
+**MDM/endpoint enforcement substrate** (see 2.0) that makes the mandatory layer truly
+non-bypassable.
 
 ```
+   ┌──────────────────────────────────────────────────────────────────────┐
+   │  MDM / endpoint mgmt + SSO   (below the developer's control)           │
+   │  pins the source/registry · binds identity · ensures the DHC ran ·     │
+   │  resists tampering · can block non-compliant sessions                  │
+   └───────────────────────────────────┬──────────────────────────────────┘
+                                        ▼
         Company Harness Repo (org source of truth)
         ├── plugins/            capability bundles (agy plugin install)
         ├── skills/             referenced by plugins + standalone
         ├── rules/              governed, reviewed rule sets (pinned)
-        └── policy/org.yaml     mandatory-global · team→bundle map · allowed-optional catalog
-                    │
-                    ▼  (identity + policy) → deterministic resolution
-   global (mandatory, non-overridable)  >  team (defaults)  >  project (opt-in)
-                    │
-                    ▼  pinned + digest-verified install
-        workspace .agents/  +  lockfile (receipt)  →  fleet audit
+        └── policy/org.yaml     mandatory-global · domain map · team map · allowed-optional
+                                        │
+                                        ▼   resolve for (identity, detected stack, project)
+        global  (mandatory)   ── org security/compliance baseline · non-overridable
+        team    (identity)    ── the team's required + default posture
+        domain  (stack)       ── e.g. python / terraform · applied when the stack is detected
+        project (opt-in)      ── additions from the allowed catalog only
+                                        │
+                    ▼  additive union · conflicts: global > team > domain > project · mandatory = locked
+                                        ▼
+        pinned + digest-verified install → workspace .agents/ + lockfile → fleet audit
 ```
+
+### 2.0 Enforcement model & trust boundary (assumes MDM)
+The DHC/harness enforces **in-session**: hook veto blocks disallowed tools, the mandatory
+layer is applied, rules are loaded, the sandbox is available. That defends against **accidents
+and casual bypass** — it does **not** make itself non-bypassable. A determined developer could
+edit `.agents/`, point the installer at a personal source, run `agy` without the sandbox, disable
+a hook, or skip the DHC entirely.
+
+Making mandatory controls **truly non-bypassable** requires a layer **below the developer's
+control** — assume an **MDM / endpoint-management + SSO** substrate (we do **not** build it):
+
+| Concern | Harness can do (best-effort) | Requires MDM / device layer |
+|---|---|---|
+| Mandatory plugin/rule applied | load + hook-veto in session | prevent removal/tamper of `.agents/`; force re-provision |
+| Source of truth | pin a tag in `install.sh` | pin the company registry at OS/config level; block personal sources |
+| Identity → team (2.3) | ask / read env | bind SSO identity; developer cannot spoof team |
+| DHC actually ran | n/a | ensure provisioning happened before coding; block un-provisioned sessions |
+| Sandbox used | offer `agy --sandbox` | enforce sandbox/isolation at the endpoint |
+
+**When it's needed:** regulated / high-assurance (banking, "the developer must not be able to
+weaken controls"). **When honor-system is fine:** personal use and low-assurance teams — the
+harness-level layer alone is adequate. Items **2.2 (mandatory), 2.3 (identity), 2.4 (tamper),
+2.6 (drift enforcement)** are best-effort at the harness level and become *hard guarantees* only
+with MDM; the roadmap calls this out per item.
 
 ### 2.1 Company harness repo + policy manifest
 - **Deliverable:** one org repo (cabral-skills structure) plus `policy/org.yaml` declaring: the
-  **global mandatory set**, **team → bundle** mappings, the **allowed optional catalog**, and
-  pinned versions/digests for each.
-- **Done when:** `(team, project)` resolves to a required + optional set from a single reviewed
-  manifest.
+  **global mandatory set**, **domain → bundle** mappings (technology-scoped, e.g. `python`,
+  `terraform`), **team → bundle** mappings (identity-scoped), the **allowed optional catalog**,
+  and pinned versions/digests for each.
+- **Done when:** `(identity, detected stack, project)` resolves to a required + optional set from
+  a single reviewed manifest.
 
-### 2.2 Layered deterministic resolution (global > team > project)
-- **Deliverable:** a resolver that computes the exact, pinned plugin + rule set for a workspace.
-  **Global = mandatory and non-overridable** (enforced via Antigravity's global-scope hook veto
-  — a mandatory blocker cannot be disabled by a project). **Team = defaults.** **Project =
-  opt-in** from the allowed catalog only.
-- **Done when:** mandatory controls provably cannot be dropped by project or agent choices.
+### 2.2 Layered deterministic resolution (global > team > domain > project)
+- **The four layers:**
+  - **Global (mandatory):** org security/compliance baseline. Non-overridable — enforced via
+    Antigravity's global-scope hook veto in-session, and *made hard* by MDM (2.0).
+  - **Team (identity-driven):** the team's required + default posture (see 2.3).
+  - **Domain (stack-triggered):** technology-scoped plugins that apply **whenever a stack is
+    detected**, across teams — e.g. a `python` domain bundle (lint/type/test posture) or a
+    `terraform` one. These are exactly the plugins whose `plugin.json` `triggers` match
+    (Phase **1.4**); the domain layer is the org-governed subset of trigger-matched plugins.
+  - **Project (opt-in):** additions the developer selects from the **allowed catalog only** —
+    can add, never weaken higher layers.
+- **Deliverable:** a resolver that computes the exact, pinned plugin + rule set as the **additive
+  union** of applicable layers; on conflict, authority order **global > team > domain > project**
+  decides, and any layer may mark an item **mandatory** (locked).
+- **Done when:** given `(identity, stack, project)` the resolved set is reproducible; mandatory
+  controls provably cannot be dropped by domain/project/agent choices (hard-guaranteed with MDM).
 
 ### 2.3 Identity-driven team resolution
 - **Problem:** self-declared team selection lets a developer dodge team/mandatory controls.
 - **Deliverable:** derive team (and thus the team + mandatory layer) from SSO / directory group
-  membership, not from the interview.
-- **Done when:** the applied policy is a function of identity, not of what the user types.
+  membership, not from the interview. (Domain is derived from the detected stack; project from
+  the allowed catalog — only *team* needs identity.)
+- **Trust note (2.0):** identity binding is only trustworthy if the SSO/MDM layer supplies it;
+  without that substrate this is advisory (a developer could still self-select).
+- **Done when:** the applied team policy is a function of verified identity, not of what the user
+  types.
 
 ### 2.4 Integrity, trust & pinning
 - **Deliverable:** every artifact pinned to version **and** digest; signature/checksum verified
@@ -154,8 +205,10 @@ signing, enterprise distribution, controlled rollout, and audit.
 
 - **Cross-cutting:** least-privilege by default; air-gap parity for every feature; keep the DHC
   thin (content in the company repo); prefer native `agy` mechanisms over bespoke engines.
-- **Non-goals (for now):** building a custom policy engine if `agy` marketplace + hook veto
-  suffice; replacing SSO/identity infrastructure; supporting non-Antigravity harness engines.
+- **Non-goals (for now):** building the **MDM / endpoint-enforcement layer** — it is *assumed to
+  exist* and we design to plug into it (see 2.0); building a custom policy engine if `agy`
+  marketplace + hook veto suffice; replacing SSO/identity infrastructure; supporting
+  non-Antigravity harness engines.
 
 ## Sequencing & dependencies
 
