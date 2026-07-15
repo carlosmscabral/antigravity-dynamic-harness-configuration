@@ -2,15 +2,26 @@
 # -*- coding: utf-8 -*-
 # 🚀 Antigravity Dynamic Harness Configurator (DHC) — Harness Integrity Verifier
 #
-# Verifies a provisioned workspace under the install-based model:
-#   - plugins are registered via `agy plugin install` (skills/agents/hooks/mcp/commands)
-#   - rules are authored as workspace policy under .agents/rules/
-#   - workspace-level .antigravityignore / mcp_config.json / hooks.json are optional
+# Verifies a workspace provisioned by dhc_provision.py, reading its deterministic receipt
+# (.agents/.dhc-provision.json):
+#   - DEFAULT mode: plugins under .agents/plugins/* (auto-discovered by interactive `agy`)
+#   - FLATTEN mode: components in direct scope (.agents/skills, .agents/agents, and
+#     merged .agents/hooks.json / .agents/mcp_config.json) — loads under `agy -p` too
+#   - rules are authored workspace policy under .agents/rules/
+# Falls back to directory inference when no receipt is present (pre-1.1 workspaces).
 
 import os
 import sys
 import json
 import shutil
+
+
+def _read_json(path):
+    try:
+        with open(path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except (FileNotFoundError, json.JSONDecodeError):
+        return None
 
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -50,39 +61,55 @@ def verify_harness():
     errors_count = 0
 
     # ---------------------------------------------------------
-    # 1. Provisioned harness — mode-aware (default plugins vs flattened)
-    #    NOTE: `agy plugin list` is the GLOBAL import registry, not workspace
-    #    auto-discovery, so it is NOT used here.
+    # 1. Provisioned harness — from the dhc_provision receipt
+    #    (falls back to directory inference for pre-1.1 workspaces)
     # ---------------------------------------------------------
-    print(f"{BOLD}[1/5] Verifying Provisioned Harness (mode-aware)...{RESET}")
-    plugins_dir = os.path.join(agents_dir, "plugins")
-    flat_skills_dir = os.path.join(agents_dir, "skills")
-    receipt = os.path.join(agents_dir, ".dhc-provision.json")
-    plugin_dirs = (
-        [d for d in os.listdir(plugins_dir)
-         if os.path.isfile(os.path.join(plugins_dir, d, "plugin.json"))]
-        if os.path.isdir(plugins_dir) else []
-    )
-    flat_skills = (
-        [d for d in os.listdir(flat_skills_dir)
-         if os.path.isfile(os.path.join(flat_skills_dir, d, "SKILL.md"))]
-        if os.path.isdir(flat_skills_dir) else []
-    )
-    if os.path.exists(receipt) or (flat_skills and not plugin_dirs):
-        print(f"  {GREEN}[✓]{RESET} Mode: FLATTEN (direct scope — loads interactive AND headless `agy -p`)")
-        print(f"  {GREEN}[✓]{RESET} Flattened skills in .agents/skills/: {len(flat_skills)}")
-        for s in sorted(flat_skills):
-            print(f"        - {s}")
-    elif plugin_dirs:
-        print(f"  {GREEN}[✓]{RESET} Mode: DEFAULT (plugin auto-discovery under .agents/plugins/)")
-        for p in sorted(plugin_dirs):
-            print(f"        - {p}")
-        print(f"  {YELLOW}[⚠️] These load in interactive `agy` only — `agy -p` (CI/headless/goal) skips them.{RESET}")
-        print(f"      For headless coverage, re-provision with DHC_FLATTEN enabled.")
-        warnings_count += 1
+    print(f"{BOLD}[1/5] Verifying Provisioned Harness (receipt)...{RESET}")
+    receipt = _read_json(os.path.join(agents_dir, ".dhc-provision.json"))
+    if receipt is not None:
+        mode = receipt.get("mode", "?")
+        if mode == "flatten":
+            print(f"  {GREEN}[✓]{RESET} Mode: FLATTEN (direct scope — loads interactive AND headless `agy -p`)")
+        else:
+            print(f"  {GREEN}[✓]{RESET} Mode: DEFAULT (plugin auto-discovery under .agents/plugins/)")
+            print(f"  {YELLOW}[⚠️] Loads in interactive `agy` only — `agy -p` (CI/headless/goal) skips plugins.{RESET}")
+            print(f"      For headless coverage, re-provision with DHC_FLATTEN enabled.")
+            warnings_count += 1
+        hooks_now = _read_json(os.path.join(agents_dir, "hooks.json")) or {}
+        mcp_now = (_read_json(os.path.join(agents_dir, "mcp_config.json")) or {}).get("mcpServers", {})
+        for name, entry in sorted(receipt.get("plugins", {}).items()):
+            miss_paths = [p for p in entry.get("createdPaths", [])
+                          if not os.path.exists(os.path.join(workspace_root, *p.split("/")))]
+            miss_hooks = [g for g in entry.get("hookGroups", []) if g not in hooks_now]
+            miss_mcp = [s for s in entry.get("mcpServers", []) if s not in mcp_now]
+            if miss_paths or miss_hooks or miss_mcp:
+                print(f"  {RED}[✗]{RESET} {name}: missing "
+                      f"{miss_paths + [f'hook:{g}' for g in miss_hooks] + [f'mcp:{s}' for s in miss_mcp]}")
+                errors_count += 1
+            else:
+                print(f"  {GREEN}[✓]{RESET} {name} "
+                      f"({len(entry.get('createdPaths', []))} paths, "
+                      f"{len(entry.get('hookGroups', []))} hooks, {len(entry.get('mcpServers', []))} mcp)")
+        if receipt.get("collisions"):
+            n = len(receipt["collisions"])
+            print(f"  {YELLOW}[⚠️] {n} collision(s) recorded — some plugin controls were skipped (name clashes).{RESET}")
+            warnings_count += 1
+        if not receipt.get("plugins"):
+            print(f"  {YELLOW}[-] Receipt records no provisioned plugins.{RESET}")
     else:
-        print(f"  {YELLOW}[⚠️] No provisioned plugins found (neither .agents/plugins/ nor flattened .agents/skills/).{RESET}")
-        warnings_count += 1
+        # Fallback: directory inference (no receipt / pre-1.1 workspace)
+        plugins_dir = os.path.join(agents_dir, "plugins")
+        plugin_dirs = ([d for d in os.listdir(plugins_dir)
+                        if os.path.isfile(os.path.join(plugins_dir, d, "plugin.json"))]
+                       if os.path.isdir(plugins_dir) else [])
+        if plugin_dirs:
+            print(f"  {GREEN}[✓]{RESET} Mode: DEFAULT (no receipt; inferred from .agents/plugins/)")
+            for p in sorted(plugin_dirs):
+                print(f"        - {p}")
+            warnings_count += 1
+        else:
+            print(f"  {YELLOW}[⚠️] No receipt and no .agents/plugins/ — nothing provisioned.{RESET}")
+            warnings_count += 1
     print()
 
     # ---------------------------------------------------------

@@ -23,8 +23,8 @@ Your goal is to bridge the "Trust Gap" and keep the developer's workspace secure
 
 *   **No Planning Mode**: You must **never** enter planning mode, write implementation plans (`implementation_plan.md`), or block the user with task lists (`task.md`).
 *   **No Application Logic Research**: Do **not** attempt to research, clone, study, or plan the implementation details of the application code itself (e.g., do **not** clone sample repositories like `adk-samples`, do **not** search developer knowledge bases for OAuth or BigQuery APIs, and do **not** read python/JS source files to understand application logic).
-*   **No External Doc Searching/Querying**: You do **not** need to call `search_documents` or look up guides on the internet during this setup. Skip all external/network documentation reads and proceed straight to Phase 3 (Structured Discovery Dialog) with the locally-available specifications. **Carve-out — local skill cache is permitted and required**: during Phase 4 promotion you **must** read the local `.agents/skills_cache/` directory and copy the skills a promoted plugin declares in its `plugin.json`. This is a local filesystem copy, not a network fetch or external research, and it does not violate this border.
-*   **Pure Configuration Scope**: Your sole scope is to discover the tech stack (Phase 1), promote the selected plugins (Phase 4 — default: copy to `.agents/plugins/`; flatten: distribute to direct `.agents/` scope), and author workspace policy/metadata (`.agents/rules/`, project-specific `.agents/mcp_config.json`, `.antigravityignore`, project `AGENTS.md`). In flatten mode, use `merge-config.py` for hook/mcp merges — never hand-merge JSON.
+*   **No External Doc Searching/Querying**: You do **not** need to call `search_documents` or look up guides on the internet during this setup. Skip all external/network documentation reads and proceed straight to Phase 3 (Structured Discovery Dialog) with the locally-available specifications. All local cache reads/copies (from `.agents/skills_cache/` / `.agents/plugins_cache/`) are performed by the `dhc_provision.py` script you invoke in Phase 4 — you do not hand-copy anything.
+*   **Pure Configuration Scope**: Your sole scope is to discover the tech stack (Phase 1), author `.agents/selection.json` and run `dhc_provision.py` once (Phase 4), and author workspace policy/content (`.agents/rules/`, project-specific `.agents/mcp_config.json`, `.antigravityignore`, project `AGENTS.md`). The mechanical promotion (copy/flatten/merge/reconcile/receipt/gitignore) belongs entirely to `dhc_provision.py` — never hand-run `cp`/`rm`/JSON merges.
 *   **Immediate Interview Execution**: When the user requests a harness configuration (even with complex application requirements like GCP runtime, OAuth, or BigQuery MCP), you must immediately perform silent discovery (Phase 1), map their tech stack to relevant plugins/skills (Phase 2), and start the interactive setup interview (Phase 3). Let the downstream coding agent handle the application research later!
 
 ---
@@ -78,36 +78,28 @@ Present the developer with a beautifully formatted **Harness Analysis Report** s
 
 ---
 
-### Phase 4: Dynamic JIT Provisioning (Promote & Author)
-Once the developer approves the selection, provision the workspace. **Scope matters and depends on how the developer will run `agy`:**
+### Phase 4: Dynamic JIT Provisioning (Author selection → one deterministic call)
+Once the developer approves, provision the workspace. **You (the agent) author DATA and rules; a single deterministic script does all the mechanical file work — you author no `cp`/`rm`/merge shell.**
 
-- **Interactive `agy`** loads workspace plugins under `.agents/plugins/*/` (auto-discovery — just place a valid `plugin.json`; no install command).
-- **Headless `agy -p`** (CI, scripting, unattended `/goal`) **skips the entire `.agents/plugins/` tree.** It DOES load direct workspace scope (`.agents/rules/*.md`, `.agents/skills/*`, `.agents/hooks.json`) and global scope (`~/.gemini/config/*`).
-- Do **not** use `agy plugin install` for per-project provisioning — it installs to `~/.gemini/jetski/plugins/` (**global, all projects**), which is the wrong scope here (reserve it for org-mandatory global plugins).
+**Scope × mode (why the flag exists):** interactive `agy` auto-discovers workspace plugins under `.agents/plugins/*/`; **headless `agy -p` (CI, scripting, `/goal`) SKIPS the plugin tree** but loads direct scope (`.agents/rules/*.md`, `.agents/skills/*`, `.agents/hooks.json`) + global (`~/.gemini/config/*`). So **default** mode is interactive-only; **flatten** mode also covers headless. (Never use `agy plugin install` per-project — it installs globally to `~/.gemini/jetski/plugins/`.)
 
-Provisioning has two modes, controlled by the **`DHC_FLATTEN` flag** (env var, or ask in Phase 3). **Default: OFF** (plugin auto-discovery — simplest, interactive-only).
+1.  **Author the selection (judgment → data).** Write `.agents/selection.json`:
+    ```json
+    { "schemaVersion": 1, "mode": "default", "plugins": ["standard-harness", "gcp-troubleshooter"], "sdd": false }
+    ```
+    `mode` = `"flatten"` if the `DHC_FLATTEN` decision (env var or Phase-3 ask) is on, else `"default"` (default OFF — simplest). `plugins` = the approved selection. This is the ONLY thing you author into the mechanical path, and it is data, not shell.
 
-**Common to both modes:**
-1.  **Reconcile (idempotent re-runs):** remove artifacts from previously-selected-but-now-deselected plugins — `.agents/plugins/<name>/` dirs (default mode) and/or flattened files recorded in `.agents/.dhc-provision.json` (flatten mode).
-2.  **Author workspace rules** into `.agents/rules/*.md` (loads in BOTH modes). From Phase 1 discovery + the developer's posture (Phase 3), write a **small, reviewable** set — stack conventions, directory layout, chosen compliance posture. `trigger: always_on` for global constraints, `trigger: file_match("<glob>")` for scoped personas. Keep minimal; never invent policy the developer didn't ask for.
-    > **Extension point:** these may later be **fetched from a pinned governance/team folder** rather than authored ad hoc. Keep `.agents/rules/` tidy (one concern per file, `<area>.md`).
-3.  **Workspace config (non-plugin):** project-specific MCP servers → `.agents/mcp_config.json` (use `mcpServers` wrapper; never add a `"type"` key — it invalidates the whole file; use `"authProviderType": "google_credentials"` for GCP). Write `.antigravityignore` and project `AGENTS.md` **no-clobber** (if present, append inside a `# --- DHC managed ---` block). SDD `specs/`+`evals/` only if the developer opts in.
+2.  **Run the deterministic provisioner ONCE:**
+    ```bash
+    python3 .agents/agents/harness-configurator/dhc_provision.py .agents/selection.json
+    ```
+    This performs — deterministically, idempotently, with a `.agents/.dhc-provision.json` receipt — the reconcile (remove deselected), skill materialization, default-copy **or** flatten-distribution (incl. relocating plugin `scripts/` to `.agents/scripts/<plugin>/` and rewriting hook paths), the `hooks.json`/`mcp_config.json` merges, and the cache gitignore. **Do NOT hand-run any `cp`/`rm`/`merge-config.py`** — the script owns all of it. (Preview with `--dry-run` if unsure.)
 
-**Mode A — default (`DHC_FLATTEN` off): plugin auto-discovery (interactive).**
-4a. For each selected plugin, materialize its declared skills: copy `.agents/skills_cache/<skill>/` into `.agents/plugins_cache/<plugin>/skills/<skill>/`, then copy the completed bundle to **`.agents/plugins/<plugin>/`**. Antigravity auto-discovers all components on the next interactive load.
-   > ⚠️ These plugins do **not** load under `agy -p`. If the developer needs headless/CI/`/goal` coverage, use flatten mode.
+3.  **Author workspace rules (judgment)** → `.agents/rules/*.md` (loads in BOTH modes). From Phase 1 + Phase 3, write a **small, reviewable** set — stack conventions, directory layout, chosen posture. `trigger: always_on` or `trigger: file_match("<glob>")`. Never invent policy the developer didn't ask for.
+    > **Extension point:** these may later be **fetched from a pinned governance/team folder**. Keep `.agents/rules/` tidy (one concern per file, `<area>.md`).
 
-**Mode B — flatten (`DHC_FLATTEN` on): direct scope (interactive AND headless).**
-4b. Distribute each selected plugin's components into direct workspace scope so they load in every mode:
-   - declared skills → `.agents/skills/<skill>/` (copy from `.agents/skills_cache/`)
-   - `agents/*` → `.agents/agents/`
-   - `hooks.json` → merge into `.agents/hooks.json` via the deterministic helper:
-     `python3 .agents/agents/harness-configurator/merge-config.py hooks .agents/plugins_cache/<plugin>/hooks.json .agents/hooks.json`
-   - `mcp_config.json` → merge into `.agents/mcp_config.json`:
-     `python3 .agents/agents/harness-configurator/merge-config.py mcp .agents/plugins_cache/<plugin>/mcp_config.json .agents/mcp_config.json`
-   - record what was written to `.agents/.dhc-provision.json` (a receipt/manifest, for idempotent reconcile + audit).
-   > Do **not** hand-merge JSON — always use `merge-config.py` (deterministic, no-clobber, collision-warning). Keep hook group names unique per plugin.
-   > **Org-mandatory / security-critical** controls that must never be dropped belong in **global scope** (`~/.gemini/config/rules/`, `globalPermissionGrants` deny in `~/.gemini/config/config.json`) — see the roadmap — not in per-project scope.
+4.  **Author non-plugin config CONTENT (judgment), after step 2:** project-specific MCP servers appended into `.agents/mcp_config.json` (`mcpServers` wrapper; never add a `"type"` key — it invalidates the file; `"authProviderType": "google_credentials"` for GCP). Write `.antigravityignore` and project `AGENTS.md` **no-clobber** (if present, append inside a `# --- DHC managed ---` block). Create `specs/`+`evals/` only if `sdd` is true.
+    > **Org-mandatory / security-critical** controls that must never be dropped belong in **global scope** (`~/.gemini/config/rules/`, `globalPermissionGrants` deny in `~/.gemini/config/config.json`) — see the roadmap — not in per-project scope.
 
 ---
 

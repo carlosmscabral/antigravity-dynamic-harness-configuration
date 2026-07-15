@@ -31,13 +31,17 @@ CABRAL_SKILLS_TAG="v1.2.0"
   air-gap-safe source the configurator copies from at promotion time).
 - `bootstrap.py` (dev mode) sources the same content from a sibling `../cabral-skills`
   checkout instead (override with `CABRAL_SKILLS_DEV_PATH`); it does not use the tag.
-- The configurator's **Phase 4** promotes each selected plugin in one of two modes, controlled
-  by the **`DHC_FLATTEN`** flag (default OFF):
-  - **Default (off):** materialize declared skills into the bundle, then copy it to
-    `.agents/plugins/<name>/` — Antigravity **auto-discovers** it on the next *interactive* load.
-  - **Flatten (on):** distribute the bundle into direct workspace scope (`.agents/skills/`,
-    `.agents/agents/`, and hooks/mcp merged via `merge-config.py` into `.agents/hooks.json` /
-    `.agents/mcp_config.json`) so the harness also loads under headless `agy -p`.
+- The configurator's **Phase 4** authors `.agents/selection.json` (`mode`, `plugins`, `sdd`)
+  then runs **one deterministic call**: `python3 .agents/agents/harness-configurator/dhc_provision.py .agents/selection.json`.
+  That script (roadmap 1.1) does ALL mechanical work — reconcile, skill materialization,
+  default-copy vs flatten-distribute, `scripts/` relocation + hook-path rewrite, hook/mcp
+  merges, cache gitignore, and a deterministic `.agents/.dhc-provision.json` receipt. The
+  `DHC_FLATTEN` flag (default OFF) only sets `mode` in the selection:
+  - **default** → copy to `.agents/plugins/<name>/` (auto-discovered by *interactive* `agy`).
+  - **flatten** → distribute into direct scope (`.agents/skills/`, `.agents/agents/`,
+    `.agents/scripts/<name>/`, merged `.agents/hooks.json` / `.agents/mcp_config.json`) so the
+    harness also loads under headless `agy -p`.
+  The agent authors no `cp`/`rm`/merge shell; `merge_config.py` is used in-process by the script.
 - **Scope × mode reality (from the loader):** interactive `agy` reads `.agents/plugins/*`;
   headless `agy -p` **skips the plugin tree** but reads direct scope (`.agents/rules/*.md`,
   `.agents/skills/*`, `.agents/hooks.json`) and global `~/.gemini/config/*`. So default mode is
@@ -89,20 +93,19 @@ Then exercise a promotion and audit it:
 
 - **Default mode** — materialize skills into the bundle and copy it into `.agents/plugins/`:
   ```bash
-  # for each skill in .agents/plugins_cache/<name>/plugin.json "skills":
-  cp -R .agents/skills_cache/<skill> .agents/plugins_cache/<name>/skills/<skill>
-  cp -R .agents/plugins_cache/<name> .agents/plugins/<name>
+  echo '{"schemaVersion":1,"mode":"default","plugins":["standard-harness"],"sdd":false}' > .agents/selection.json
+  python3 .agents/agents/harness-configurator/dhc_provision.py .agents/selection.json
   python3 .agents/agents/harness-configurator/verify-harness.py   # expect Mode: DEFAULT
   ```
   (Verify in an interactive `agy` session that a plugin skill/rule is active; `agy -p` will NOT see it.)
-- **Flatten mode (`DHC_FLATTEN=1`)** — distribute into direct scope; merge with the helper:
+- **Flatten mode** — same call with `"mode":"flatten"`:
   ```bash
-  cp -R .agents/skills_cache/<skill> .agents/skills/<skill>
-  python3 .agents/agents/harness-configurator/merge-config.py hooks .agents/plugins_cache/<name>/hooks.json .agents/hooks.json
-  python3 .agents/agents/harness-configurator/merge-config.py mcp   .agents/plugins_cache/<name>/mcp_config.json .agents/mcp_config.json
+  echo '{"schemaVersion":1,"mode":"flatten","plugins":["standard-harness"],"sdd":false}' > .agents/selection.json
+  python3 .agents/agents/harness-configurator/dhc_provision.py .agents/selection.json
   python3 .agents/agents/harness-configurator/verify-harness.py   # expect Mode: FLATTEN
   ```
   (Verify with `agy -p` that a flattened `.agents/rules/` rule fires — headless coverage is the point.)
+- Unit tests: `python3 -m unittest tests.test_dhc_provision` (self-contained; no `agy` needed).
 - Rules: confirm the configurator authored `.agents/rules/*.md` (these load in BOTH modes).
 - Bad-pin sanity: a nonexistent `CABRAL_SKILLS_TAG` must make `install.sh` fail fast with a
   clear error and leave no partial `.agents/` caches.

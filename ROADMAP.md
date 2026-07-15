@@ -50,18 +50,23 @@ projects).*
 
 Goal: make the existing single-source flow **deterministic, governed, verifiable, and generic**.
 
-### 1.1 Deterministic provisioning core
+### 1.1 Deterministic provisioning core — ✅ DELIVERED
 - **Problem:** promotion steps (`cp`, JSON merges, cache gitignore) hand-run by the LLM —
   non-auditable and drift-prone.
-- **Started:** `merge-config.py` now performs the fragile flatten-mode hook/mcp merges
-  deterministically (idempotent, no-clobber, collision-warned) — the LLM no longer hand-merges
-  JSON. The `DHC_FLATTEN` flag + a `.agents/.dhc-provision.json` receipt are in place.
-- **Deliverable (remaining):** fold the rest of promotion into a single `dhc-provision
-  <selection.json>` CLI — reconcile (remove deselected), materialize skills, copy-or-flatten,
-  gitignore caches, write the receipt. The configurator computes a *selection* (discovery +
-  interview) and calls it; no agent-authored shell in the mechanical path.
-- **Done when:** identical selection → identical result + a provisioning receipt; no
-  agent-authored shell in the mechanical path.
+- **Delivered:** `agents/harness-configurator/dhc_provision.py` — a single CLI
+  (`dhc_provision.py <selection.json>`) that does ALL mechanical promotion deterministically:
+  preflight (fail before any write), reconcile (remove deselected via the receipt),
+  skill materialization, default-copy vs flatten-distribute, plugin `scripts/` relocation to
+  `.agents/scripts/<plugin>/` **+ hook-path rewrite (fixes the flatten hook bug)**, in-process
+  hook/mcp merges, cache gitignore, and a deterministic `.agents/.dhc-provision.json` receipt
+  (canonical JSON, no timestamps, `receiptHash`). `merge_config.py` (renamed, importable) gained
+  dict cores + `unmerge_hooks`/`unmerge_mcp`. `verify-harness.py` parses the receipt (asserts
+  createdPaths + hook/mcp presence + hook-script executability). `bootstrap.py` deploys the whole
+  configurator dir. `agent.md` Phase 4 = author `selection.json` → one `dhc_provision.py` call
+  (no agent-authored shell). 12 self-contained tests in `tests/test_dhc_provision.py`.
+- **Done when (met):** identical selection → byte-identical receipt (verified, T4); no
+  agent-authored shell in the mechanical path (agent authors only `selection.json` + rules/config).
+- **Deferred to 1.5:** wiring the test module into GitHub Actions CI.
 
 ### 1.2 Governance rules as pinned artifacts (not improvised)
 - **Problem:** rules are authored by LLM judgment — fine for conventions, unsafe for compliance.

@@ -89,26 +89,23 @@ def bootstrap():
     if legacy_file.exists():
         legacy_file.unlink()
 
-    # 3. Deploy the Harness Configurator Agent
-    src_agent_prompt = src_dir / "agents" / "harness-configurator" / "agent.md"
-    target_agent_prompt = target_agents_dir / "agent.md"
-    
-    if not src_agent_prompt.exists():
-        print(f"\033[91m[DHC ERROR] Could not find the source agent prompt at {src_agent_prompt}{RESET}")
+    # 3. Deploy the WHOLE Harness Configurator dir (agent.md, verify-harness.py,
+    #    dhc_provision.py, merge_config.py + shim). Whole-dir copy matches install.sh's
+    #    `cp -R agents/.` so dev/offline mode has the provisioner + merge helper too.
+    src_cfg = src_dir / "agents" / "harness-configurator"
+    if not (src_cfg / "agent.md").exists():
+        print(f"\033[91m[DHC ERROR] Could not find the configurator at {src_cfg}{RESET}")
         sys.exit(1)
-        
-    print(f"{GREEN}[DHC] Deploying Harness Configurator Agent assets...{RESET}")
-    shutil.copy2(src_agent_prompt, target_agent_prompt)
-    
-    src_agent_verifier = src_dir / "agents" / "harness-configurator" / "verify-harness.py"
-    target_agent_verifier = target_agents_dir / "verify-harness.py"
-    if src_agent_verifier.exists():
-        shutil.copy2(src_agent_verifier, target_agent_verifier)
-        # Make the verifier script executable
-        os.chmod(target_agent_verifier, os.stat(target_agent_verifier).st_mode | 0o111)
+
+    print(f"{GREEN}[DHC] Deploying Harness Configurator assets...{RESET}")
+    if target_agents_dir.exists():
+        shutil.rmtree(target_agents_dir)
+    shutil.copytree(src_cfg, target_agents_dir,
+                    ignore=shutil.ignore_patterns("__pycache__", "*.pyc"))
+    for py in target_agents_dir.glob("*.py"):
+        os.chmod(py, os.stat(py).st_mode | 0o111)
 
 
-    
     # 4. Stage plugins + skills from the cabral-skills monorepo into the caches.
     #    Symlink for rapid live updates during developer runs; fall back to copy.
     def _stage(src_root, target_root, label):
