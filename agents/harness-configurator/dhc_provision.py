@@ -333,23 +333,6 @@ def ensure_gitignore_cache_block(paths):
                 + GITIGNORE_MARKER + "\n" + "\n".join(CACHE_IGNORES) + "\n")
 
 
-def apply_sdd(paths, sdd, prior_sdd):
-    """SDD enforcement: when sdd is on, set .agents/settings.json {"agentMode":"plan"}
-    (native plan-approval gate before edits; respected interactive AND `agy -p`). Preserve
-    any other settings keys. When sdd flips off, remove agentMode only if WE set it to plan."""
-    settings = os.path.join(paths.agents, "settings.json")
-    if sdd:
-        data = merge_config._load(settings) or {}
-        if data.get("agentMode") != "plan":
-            data["agentMode"] = "plan"
-            merge_config._save(settings, data)
-    elif prior_sdd:
-        data = merge_config._load(settings)
-        if data and data.get("agentMode") == "plan":
-            data.pop("agentMode", None)
-            merge_config._save(settings, data)
-
-
 def build_receipt(sel, entries, collisions):
     core = {
         "schemaVersion": SCHEMA_VERSION,
@@ -432,10 +415,11 @@ def provision(selection_path, workspace, plugins_cache, skills_cache, dry_run=Fa
         entries[name] = entry
         collisions.extend(coll)
 
-    # 3) gitignore caches + SDD enforcement + 4) receipt
+    # 3) gitignore caches + 4) receipt
+    # NOTE: SDD is NOT enforced via .agents/settings.json — Antigravity does not honor
+    # workspace agentMode at runtime. SDD = the sdd.md rule + launching `agy --mode=plan`
+    # (surfaced in the Phase-5 handoff). The receipt just records that sdd was requested.
     ensure_gitignore_cache_block(paths)
-    prior_sdd = bool(prior and (prior.get("sdd") or prior.get("selection", {}).get("sdd")))
-    apply_sdd(paths, sel.get("sdd", False), prior_sdd)
     receipt = build_receipt(sel, entries, sorted(collisions, key=lambda c: (c["plugin"], c["kind"], c["name"])))
     changed = write_receipt(paths.receipt, receipt)
     _log(f"[dhc-provision] {'wrote' if changed else 'no change to'} {RECEIPT_NAME} "

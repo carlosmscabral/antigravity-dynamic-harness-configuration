@@ -78,12 +78,23 @@ Goal: make the existing single-source flow **deterministic, governed, verifiable
   cannot originate a governed rule.
 
 ### 1.3 Efficacy-based verification
-- **Problem:** `verify-harness.py` checks *presence* (plugin imported, rule file exists), not
-  *efficacy*.
-- **Deliverable:** the verifier actively exercises controls — e.g. attempt a `curl` under a
-  blocking posture and confirm it is blocked; confirm each declared rule is actually loaded;
-  confirm each selected plugin's components are registered (`agy plugin list`). Emit a hashable
-  receipt.
+- **Problem:** `verify-harness.py` checks *presence* (plugin imported, rule file exists, script
+  is executable), not *efficacy*. Antigravity's **documented** behavior has diverged from
+  **runtime** twice, and presence-checks missed both:
+  - **Hook CWD:** hooks execute from a working directory that is *not* the workspace root, so
+    workspace-relative hook `command` paths fail (`exit 127`, "No such file") even though the
+    script exists + is executable. (Fixed in 1.1 by writing **absolute** hook paths; the
+    verifier should still *resolve every hook command from the runtime CWD*, not just stat it.)
+  - **Workspace `agentMode` ignored:** a `.agents/settings.json` `{"agentMode":"plan"}` does
+    **not** put sessions in plan mode — so SDD "enforcement" via that file was a no-op. Plan mode
+    is only reliably set by the `--mode=plan` launch flag. (SDD is now the `sdd.md` rule + a
+    `--mode=plan` launch recommendation, not a workspace setting.)
+- **Principle:** *never assume a control works from docs — exercise it at runtime.* Presence ≠
+  efficacy; resolvability ≠ the documented path; a written setting ≠ an applied setting.
+- **Deliverable:** the verifier actively exercises controls — attempt a `curl` under a blocking
+  posture and confirm it is blocked; resolve + dry-run each hook `command` from the real hook
+  CWD; confirm each declared rule is actually loaded; confirm plan mode is active when SDD is on.
+  Emit a hashable receipt.
 - **Done when:** verification **fails** when a control is present but ineffective.
 
 ### 1.4 Generic discovery + metadata-driven plugin matching

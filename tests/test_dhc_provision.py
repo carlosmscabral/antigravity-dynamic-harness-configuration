@@ -224,17 +224,12 @@ class DhcProvisionTest(unittest.TestCase):
         self.assertEqual(gi.count(".agents/plugins_cache/"), 1)
         self.assertEqual(gi.count(".agents/skills_cache/"), 1)
 
-    # ── T13 SDD enforcement via settings.json agentMode=plan ──
-    def test_T13_sdd_plan_mode(self):
+    # ── T13 SDD is recorded in the receipt; NOT written as settings.json ──
+    # (Antigravity does not honor workspace agentMode; SDD = sdd.md rule + `agy --mode=plan`.)
+    def test_T13_sdd_recorded_not_settings(self):
         self._prov("default", ["alpha"], sdd=True)
-        self.assertEqual(self._json(".agents/settings.json")["agentMode"], "plan")
         self.assertTrue(self.load_receipt()["sdd"])
-        # preserve other keys, and revert agentMode when sdd flips off
-        _w(self.path(".agents/settings.json"), json.dumps({"agentMode": "plan", "theme": "dark"}))
-        self._prov("default", ["alpha"], sdd=False)
-        sj = self._json(".agents/settings.json")
-        self.assertNotIn("agentMode", sj)
-        self.assertEqual(sj.get("theme"), "dark")
+        self.assertFalse(os.path.exists(self.path(".agents/settings.json")))
 
     def _run_rc(self, mode, plugins):
         sel = os.path.join(self.agents, "selection.json")

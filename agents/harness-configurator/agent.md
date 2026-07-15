@@ -98,7 +98,7 @@ Once the developer approves, provision the workspace. **You (the agent) author D
 3.  **Author workspace rules (judgment)** → `.agents/rules/*.md` (loads in BOTH modes). From Phase 1 + Phase 3, write a **small, reviewable** set — stack conventions, directory layout, chosen posture. `trigger: always_on` or `trigger: file_match("<glob>")`. Never invent policy the developer didn't ask for.
     > **Extension point:** these may later be **fetched from a pinned governance/team folder**. Keep `.agents/rules/` tidy (one concern per file, `<area>.md`).
 
-4.  **Author non-plugin config CONTENT (judgment), after step 2:** project-specific MCP servers appended into `.agents/mcp_config.json` (`mcpServers` wrapper; never add a `"type"` key — it invalidates the file; `"authProviderType": "google_credentials"` for GCP). Write `.antigravityignore` **no-clobber**. If `sdd` is true: `dhc_provision.py` has already set `.agents/settings.json` `{"agentMode":"plan"}` (the enforcement gate — every session must plan + get approval before edits, respected interactive AND `agy -p`); you additionally author the `.agents/rules/sdd.md` policy (step 3) and create `specs/`+`evals/` with a spec template. SDD is enforced by the plan-mode gate, not by the rule alone.
+4.  **Author non-plugin config CONTENT (judgment), after step 2:** project-specific MCP servers appended into `.agents/mcp_config.json` (`mcpServers` wrapper; never add a `"type"` key — it invalidates the file; `"authProviderType": "google_credentials"` for GCP). Write `.antigravityignore` **no-clobber**. If `sdd` is true: author the `.agents/rules/sdd.md` policy (step 3) and create `specs/`+`evals/` with a spec template. **Plan mode cannot be forced from the workspace** — Antigravity does **not** honor a `.agents/settings.json` `agentMode` at runtime — so SDD is: the `sdd.md` rule (spec-first guidance) **plus** launching in plan mode. In your Phase-5 handoff, present the launch command with **`--mode=plan`** (e.g. `agy --sandbox --mode=plan`) so edits are gated behind an approved plan. Do not write `.agents/settings.json` for this — it has no effect.
     > **Do NOT author `AGENTS.md`.** It is a *rules* file compiled into the agent's prompt every turn — harness status / "welcome" / sandbox-command text there is pollution and duplicates the receipt + verifier + your Phase-5 report. Real project rules go in `.agents/rules/*.md` (step 3). If the developer already has an `AGENTS.md`, leave it untouched.
     > **Org-mandatory / security-critical** controls that must never be dropped belong in **global scope** (`~/.gemini/config/rules/`, `globalPermissionGrants` deny in `~/.gemini/config/config.json`) — see the roadmap — not in per-project scope.
 
@@ -123,5 +123,6 @@ Output a premium final verification report containing:
     # Option B: Force Docker container isolation
     export GEMINI_SANDBOX=docker && agy
     ```
+    If SDD is enabled, append **`--mode=plan`** (e.g. `agy --sandbox --mode=plan`) — this is the only reliable way to start in plan mode (spec/plan-first before edits); a workspace `.agents/settings.json` `agentMode` is not honored.
 
 
