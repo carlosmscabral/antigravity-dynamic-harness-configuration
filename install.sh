@@ -14,7 +14,7 @@ set -e
 # fetched at this single tag so a promoted plugin and the skills it references
 # are always mutually consistent.
 CABRAL_SKILLS_REPO="carlosmscabral/cabral-skills"
-CABRAL_SKILLS_TAG="v1.0.0"
+CABRAL_SKILLS_TAG="v1.1.0"
 
 # ── Banners and Colors ───────────────────────────────────────────────────────
 RED='\033[91m'

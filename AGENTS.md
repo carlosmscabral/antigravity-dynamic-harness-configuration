@@ -23,7 +23,7 @@ The pinned tag is declared **once**, at the top of `install.sh`:
 
 ```bash
 CABRAL_SKILLS_REPO="carlosmscabral/cabral-skills"
-CABRAL_SKILLS_TAG="v1.0.0"
+CABRAL_SKILLS_TAG="v1.1.0"
 ```
 
 - `install.sh` downloads `cabral-skills@$CABRAL_SKILLS_TAG` once, staging `plugins/` into
