@@ -68,15 +68,15 @@ export GEMINI_SANDBOX=docker && agy
 
 1.  **The Shell Installer (`install.sh`)**: A lightweight, zero-dependency shell script. It fetches the configurator agent from this repo and the plugins + skills from `cabral-skills` at the **pinned tag** (`CABRAL_SKILLS_TAG`, top of the script — bump it to adopt a new content release), unpacks them into local caches, and configures permissions.
 2.  **The Bootstrap Installer (`bootstrap.py`)**: A local python utility for developer/offline mode. It symlinks (for live edits) or copies plugins + skills from a local `cabral-skills` checkout (`../cabral-skills` by default, or `CABRAL_SKILLS_DEV_PATH`) into the `.agents/` caches.
-3.  **The Harness Configurator Agent (`agents/harness-configurator/agent.md`)**: A simplified, decoupled setup orchestrator. It silent-scans your workspace, conducts a structured interview, promotes selected plugins, **materializes each promoted plugin's declared skills from `.agents/skills_cache/`** (a local copy — no network, air-gap safe), and writes `.agents/mcp_config.json`, `.agents/hooks.json`, and `.antigravityignore`.
-4.  **Dormant Caches (`.agents/plugins_cache/` + `.agents/skills_cache/`)**: Inactive cache directories populated at install. Plugins here do not auto-activate; only selected plugins are promoted JIT into `.agents/plugins/`, at which point their declared skills are copied in from `skills_cache/`.
+3.  **The Harness Configurator Agent (`agents/harness-configurator/agent.md`)**: A simplified, decoupled setup orchestrator. It silent-scans your workspace, conducts a structured interview, **materializes each selected plugin's declared skills from `.agents/skills_cache/`** (local copy — air-gap safe) then **registers it natively with `agy plugin install` + `agy plugin enable`** (Antigravity composes the plugins' skills/agents/hooks/mcp). Separately, it **authors workspace rules into `.agents/rules/`** (rules are project policy, not a plugin component) and writes project-specific `.agents/mcp_config.json` / `.antigravityignore` / `AGENTS.md`.
+4.  **Dormant Caches (`.agents/plugins_cache/` + `.agents/skills_cache/`)**: Inactive cache directories populated at install. They are the *source* the configurator installs from — nothing here is active until `agy plugin install` registers a selected plugin (with its skills materialized in).
 5.  **Operational Integration Playbook (`playbooks/antigravity_integration_playbook.md`)**: The master manual detailing sandboxing parameters, hierarchical rule overrides, skill triggers, background tasks, sidecars, and Python SDK pipelines.
 
 ---
 
 ## 🔌 Modular Customization Plugins
 
-> Plugins are defined in the [cabral-skills](https://github.com/carlosmscabral/cabral-skills) monorepo under `plugins/`. Each plugin references the skills it uses by name (`plugin.json` → `skills[]`); those skill bodies live under `cabral-skills/skills/` and are materialized into the active plugin at promotion time.
+> Plugins are defined in the [cabral-skills](https://github.com/carlosmscabral/cabral-skills) monorepo under `plugins/`. Each is a capability bundle (skills/agents/hooks/mcp/commands) that references its skills by name (`plugin.json` → `skills[]`); the bodies live under `cabral-skills/skills/` and are materialized into the bundle just before `agy plugin install`. Plugins do **not** carry rules — those are authored into the workspace `.agents/rules/` by the configurator.
 
 *   **`standard-harness` (General SDLC)**:
     Enforces standard styling, modular testing conventions, formatting linter execution, the `refactoring-expert` subagent, and deploys a robust default `.antigravityignore` template.
