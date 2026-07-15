@@ -23,7 +23,7 @@ The pinned tag is declared **once**, at the top of `install.sh`:
 
 ```bash
 CABRAL_SKILLS_REPO="carlosmscabral/cabral-skills"
-CABRAL_SKILLS_TAG="v1.2.5"
+CABRAL_SKILLS_TAG="v1.3.0"
 ```
 
 - `install.sh` downloads `cabral-skills@$CABRAL_SKILLS_TAG` once, staging `plugins/` into
@@ -31,8 +31,10 @@ CABRAL_SKILLS_TAG="v1.2.5"
   air-gap-safe source the configurator copies from at promotion time).
 - `bootstrap.py` (dev mode) sources the same content from a sibling `../cabral-skills`
   checkout instead (override with `CABRAL_SKILLS_DEV_PATH`); it does not use the tag.
-- The configurator's **Phase 4** authors `.agents/selection.json` (`mode`, `plugins`, `sdd`)
+- The configurator's **Phase 4** authors `.agents/selection.json` (`mode`, `plugins`, `superpowers`)
   then runs **one deterministic call**: `python3 .agents/agents/harness-configurator/dhc_provision.py .agents/selection.json`.
+  When `superpowers` is true, the script activates the whole vendored obra/superpowers methodology
+  (materializes its skills → `.agents/skills/` + its always-on bootstrap → `.agents/rules/superpowers.md`).
   That script (roadmap 1.1) does ALL mechanical work — reconcile, skill materialization,
   default-copy vs flatten-distribute, `scripts/` relocation + hook-path rewrite, hook/mcp
   merges, cache gitignore, and a deterministic `.agents/.dhc-provision.json` receipt. The
@@ -93,14 +95,14 @@ Then exercise a promotion and audit it:
 
 - **Default mode** — materialize skills into the bundle and copy it into `.agents/plugins/`:
   ```bash
-  echo '{"schemaVersion":1,"mode":"default","plugins":["standard-harness"],"sdd":false}' > .agents/selection.json
+  echo '{"schemaVersion":1,"mode":"default","plugins":["standard-harness"],"superpowers":false}' > .agents/selection.json
   python3 .agents/agents/harness-configurator/dhc_provision.py .agents/selection.json
   python3 .agents/agents/harness-configurator/verify-harness.py   # expect Mode: DEFAULT
   ```
   (Verify in an interactive `agy` session that a plugin skill/rule is active; `agy -p` will NOT see it.)
 - **Flatten mode** — same call with `"mode":"flatten"`:
   ```bash
-  echo '{"schemaVersion":1,"mode":"flatten","plugins":["standard-harness"],"sdd":false}' > .agents/selection.json
+  echo '{"schemaVersion":1,"mode":"flatten","plugins":["standard-harness"],"superpowers":false}' > .agents/selection.json
   python3 .agents/agents/harness-configurator/dhc_provision.py .agents/selection.json
   python3 .agents/agents/harness-configurator/verify-harness.py   # expect Mode: FLATTEN
   ```

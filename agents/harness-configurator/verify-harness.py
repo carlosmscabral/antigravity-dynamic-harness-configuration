@@ -96,10 +96,17 @@ def verify_harness():
             warnings_count += 1
         if not receipt.get("plugins"):
             print(f"  {YELLOW}[-] Receipt records no provisioned plugins.{RESET}")
-        if receipt.get("sdd"):
-            print(f"  {YELLOW}[i]{RESET} SDD requested — spec-first is guided by .agents/rules/sdd.md; "
-                  f"launch with `agy --mode=plan` to gate edits behind an approved plan "
-                  f"(workspace settings.json does NOT force plan mode).")
+        sp = receipt.get("superpowers") or {}
+        if sp.get("active"):
+            sp_missing = [p for p in sp.get("createdPaths", [])
+                          if not os.path.exists(os.path.join(workspace_root, *p.split("/")))]
+            if sp_missing:
+                print(f"  {RED}[✗]{RESET} Superpowers active but missing: {sp_missing}")
+                errors_count += 1
+            else:
+                n = len([p for p in sp.get("createdPaths", []) if p.startswith(".agents/skills/")])
+                print(f"  {GREEN}[✓]{RESET} Superpowers methodology active ({n} skills + always-on bootstrap rule).")
+                print(f"       Spec-first is instruction-enforced; launch `agy --mode=plan` for a session-level gate.")
     else:
         # Fallback: directory inference (no receipt / pre-1.1 workspace)
         plugins_dir = os.path.join(agents_dir, "plugins")

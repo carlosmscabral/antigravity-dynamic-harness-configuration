@@ -73,6 +73,7 @@ Present the developer with a beautifully formatted **Harness Analysis Report** s
 - **Detected Project Profile**: Language, database connection variables, and cloud dependencies.
 - **Recommended Plugin Stack**: Pre-selected profiles (e.g., `standard-harness` + `gcp-troubleshooter`).
 - **Additional Cognitive Skills**: Suggest relevant tasks from the customizations cache.
+- **Superpowers methodology (opt-in)**: Ask *"Activate the superpowers spec-driven methodology?"* — an all-or-nothing discipline (brainstorm/spec-first with an approval gate, plus TDD, worktrees, and code-review gates for all non-trivial work). Default OFF. If yes, set `"superpowers": true` in the selection.
 
 *Invite the developer to customize, refine, or approve the selected configuration.*
 
@@ -85,9 +86,9 @@ Once the developer approves, provision the workspace. **You (the agent) author D
 
 1.  **Author the selection (judgment → data).** Write `.agents/selection.json`:
     ```json
-    { "schemaVersion": 1, "mode": "default", "plugins": ["standard-harness", "gcp-troubleshooter"], "sdd": false }
+    { "schemaVersion": 1, "mode": "default", "plugins": ["standard-harness", "gcp-troubleshooter"], "superpowers": false }
     ```
-    `mode` = `"flatten"` if the `DHC_FLATTEN` decision (env var or Phase-3 ask) is on, else `"default"` (default OFF — simplest). `plugins` = the approved selection. This is the ONLY thing you author into the mechanical path, and it is data, not shell.
+    `mode` = `"flatten"` if the `DHC_FLATTEN` decision (env var or Phase-3 ask) is on, else `"default"` (default OFF — simplest). `plugins` = the approved selection. `superpowers` = whether the developer chose to **activate the superpowers methodology** (Phase-3 ask — see below; default OFF). This is the ONLY thing you author into the mechanical path, and it is data, not shell.
 
 2.  **Run the deterministic provisioner ONCE:**
     ```bash
@@ -98,7 +99,8 @@ Once the developer approves, provision the workspace. **You (the agent) author D
 3.  **Author workspace rules (judgment)** → `.agents/rules/*.md` (loads in BOTH modes). From Phase 1 + Phase 3, write a **small, reviewable** set — stack conventions, directory layout, chosen posture. `trigger: always_on` or `trigger: file_match("<glob>")`. Never invent policy the developer didn't ask for.
     > **Extension point:** these may later be **fetched from a pinned governance/team folder**. Keep `.agents/rules/` tidy (one concern per file, `<area>.md`).
 
-4.  **Author non-plugin config CONTENT (judgment), after step 2:** project-specific MCP servers appended into `.agents/mcp_config.json` (`mcpServers` wrapper; never add a `"type"` key — it invalidates the file; `"authProviderType": "google_credentials"` for GCP). Write `.antigravityignore` **no-clobber**. If `sdd` is true: author the `.agents/rules/sdd.md` policy (step 3) and create `specs/`+`evals/` with a spec template. **Plan mode cannot be forced from the workspace** — Antigravity does **not** honor a `.agents/settings.json` `agentMode` at runtime — so SDD is: the `sdd.md` rule (spec-first guidance) **plus** launching in plan mode. In your Phase-5 handoff, present the launch command with **`--mode=plan`** (e.g. `agy --sandbox --mode=plan`) so edits are gated behind an approved plan. Do not write `.agents/settings.json` for this — it has no effect.
+4.  **Author non-plugin config CONTENT (judgment), after step 2:** project-specific MCP servers appended into `.agents/mcp_config.json` (`mcpServers` wrapper; never add a `"type"` key — it invalidates the file; `"authProviderType": "google_credentials"` for GCP). Write `.antigravityignore` **no-clobber**.
+    > **Spec-driven / superpowers:** when `superpowers` is true in the selection, `dhc_provision.py` activates the whole vendored **obra/superpowers** methodology — it materializes its skills to `.agents/skills/` and its always-on bootstrap to `.agents/rules/superpowers.md` (which forces "invoke the right skill before acting", brainstorm/spec-first, and an approval gate before code). You do **not** hand-author `sdd.md` — it's the pinned vendored bootstrap. Plan mode can't be forced from the workspace, so in your Phase-5 handoff also recommend launching with **`--mode=plan`** (`agy --sandbox --mode=plan`) as a complementary session gate.
     > **Do NOT author `AGENTS.md`.** It is a *rules* file compiled into the agent's prompt every turn — harness status / "welcome" / sandbox-command text there is pollution and duplicates the receipt + verifier + your Phase-5 report. Real project rules go in `.agents/rules/*.md` (step 3). If the developer already has an `AGENTS.md`, leave it untouched.
     > **Org-mandatory / security-critical** controls that must never be dropped belong in **global scope** (`~/.gemini/config/rules/`, `globalPermissionGrants` deny in `~/.gemini/config/config.json`) — see the roadmap — not in per-project scope.
 
@@ -123,6 +125,6 @@ Output a premium final verification report containing:
     # Option B: Force Docker container isolation
     export GEMINI_SANDBOX=docker && agy
     ```
-    If SDD is enabled, append **`--mode=plan`** (e.g. `agy --sandbox --mode=plan`) — this is the only reliable way to start in plan mode (spec/plan-first before edits); a workspace `.agents/settings.json` `agentMode` is not honored.
+    If the superpowers methodology is active, append **`--mode=plan`** (e.g. `agy --sandbox --mode=plan`) — the reliable way to start in plan mode (spec/plan-first before edits); a workspace `.agents/settings.json` `agentMode` is not honored.
 
 

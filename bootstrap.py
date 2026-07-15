@@ -62,6 +62,7 @@ def bootstrap():
     target_agents_dir = target_dir / ".agents" / "agents" / "harness-configurator"
     target_plugins_dir = target_dir / ".agents" / "plugins_cache"
     target_skills_dir = target_dir / ".agents" / "skills_cache"
+    target_superpowers_dir = target_dir / ".agents" / "superpowers_cache"
 
     def _clean_cache(path):
         """Remove a cache dir whose entries may be symlinks, files, or trees."""
@@ -79,6 +80,7 @@ def bootstrap():
         shutil.rmtree(target_agents_dir)
     _clean_cache(target_plugins_dir)
     _clean_cache(target_skills_dir)
+    _clean_cache(target_superpowers_dir)
 
     target_agents_dir.mkdir(parents=True, exist_ok=True)
     target_plugins_dir.mkdir(parents=True, exist_ok=True)
@@ -132,6 +134,12 @@ def bootstrap():
     _stage(cabral_skills_dir / "plugins", target_plugins_dir, "plugins")
     _stage(cabral_skills_dir / "skills", target_skills_dir, "skills")
 
+    # Stage the vendored superpowers methodology (copy — pinned third-party, not live-edited).
+    sp_src = cabral_skills_dir / "vendored" / "superpowers"
+    if sp_src.exists():
+        shutil.copytree(sp_src, target_superpowers_dir)
+        print(f"{GREEN}[DHC] Staging superpowers methodology in cache...{RESET}")
+
     # Keep the build-time caches out of git (they are the offline install source
     # for reconfiguration, kept on purpose, but must never be committed).
     gitignore = target_dir / ".gitignore"
@@ -140,7 +148,7 @@ def bootstrap():
         with open(gitignore, "a") as f:
             f.write(
                 "\n# DHC build-time caches (offline install source; do not commit)\n"
-                ".agents/plugins_cache/\n.agents/skills_cache/\n"
+                ".agents/plugins_cache/\n.agents/skills_cache/\n.agents/superpowers_cache/\n"
             )
         print(f"{GREEN}[DHC] Added .agents/*_cache/ to .gitignore.{RESET}")
         

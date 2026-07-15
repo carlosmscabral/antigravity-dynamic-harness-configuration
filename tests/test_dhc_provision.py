@@ -61,6 +61,14 @@ def build_fixtures(agents):
     # plugin delta: references a missing skill
     _w(os.path.join(pc, "delta", "plugin.json"),
        json.dumps({"name": "delta", "version": "1.0.0", "skills": ["skill-missing"]}))
+    # synthetic superpowers cache (mirrors vendored/superpowers: skills/ + bootstrap-rule.md)
+    sp = os.path.join(agents, "superpowers_cache")
+    _w(os.path.join(sp, "skills", "using-superpowers", "SKILL.md"),
+       "---\nname: using-superpowers\ndescription: bootstrap\n---\nbody\n")
+    _w(os.path.join(sp, "skills", "brainstorming", "SKILL.md"),
+       "---\nname: brainstorming\ndescription: spec-first\n---\n")
+    _w(os.path.join(sp, "bootstrap-rule.md"),
+       "---\ntrigger: always_on\ndescription: superpowers bootstrap\n---\nInvoke skills before acting.\n")
     return pc, sc
 
 
@@ -76,9 +84,10 @@ class DhcProvisionTest(unittest.TestCase):
         shutil.rmtree(self.root, ignore_errors=True)
 
     # helpers
-    def _prov(self, mode, plugins, dry=False, sdd=False):
+    def _prov(self, mode, plugins, dry=False, superpowers=False):
         sel = os.path.join(self.agents, "selection.json")
-        _w(sel, json.dumps({"schemaVersion": 1, "mode": mode, "plugins": plugins, "sdd": sdd}))
+        _w(sel, json.dumps({"schemaVersion": 1, "mode": mode, "plugins": plugins,
+                            "superpowers": superpowers}))
         return dp.provision(sel, self.root, None, None, dry_run=dry, quiet=True)
 
     def path(self, rel):
@@ -224,16 +233,24 @@ class DhcProvisionTest(unittest.TestCase):
         self.assertEqual(gi.count(".agents/plugins_cache/"), 1)
         self.assertEqual(gi.count(".agents/skills_cache/"), 1)
 
-    # ── T13 SDD is recorded in the receipt; NOT written as settings.json ──
-    # (Antigravity does not honor workspace agentMode; SDD = sdd.md rule + `agy --mode=plan`.)
-    def test_T13_sdd_recorded_not_settings(self):
-        self._prov("default", ["alpha"], sdd=True)
-        self.assertTrue(self.load_receipt()["sdd"])
-        self.assertFalse(os.path.exists(self.path(".agents/settings.json")))
+    # ── T13 superpowers activation materializes skills + bootstrap; deactivate removes them ──
+    def test_T13_superpowers_toggle(self):
+        self._prov("default", ["alpha"], superpowers=True)
+        self.assertTrue(os.path.isfile(self.path(".agents/skills/using-superpowers/SKILL.md")))
+        self.assertTrue(os.path.isfile(self.path(".agents/skills/brainstorming/SKILL.md")))
+        self.assertTrue(os.path.isfile(self.path(".agents/rules/superpowers.md")))
+        r = self.load_receipt()
+        self.assertTrue(r["superpowers"]["active"])
+        self.assertIn(".agents/rules/superpowers.md", r["superpowers"]["createdPaths"])
+        # deactivate -> all superpowers artifacts removed
+        self._prov("default", ["alpha"], superpowers=False)
+        self.assertFalse(os.path.exists(self.path(".agents/skills/using-superpowers")))
+        self.assertFalse(os.path.exists(self.path(".agents/rules/superpowers.md")))
+        self.assertFalse(self.load_receipt()["superpowers"]["active"])
 
     def _run_rc(self, mode, plugins):
         sel = os.path.join(self.agents, "selection.json")
-        _w(sel, json.dumps({"schemaVersion": 1, "mode": mode, "plugins": plugins, "sdd": False}))
+        _w(sel, json.dumps({"schemaVersion": 1, "mode": mode, "plugins": plugins, "superpowers": False}))
         return dp.main(["dhc_provision.py", sel, "--workspace", self.root, "--quiet"])
 
 

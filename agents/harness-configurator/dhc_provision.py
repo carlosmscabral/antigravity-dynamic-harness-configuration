@@ -50,6 +50,7 @@ class Paths:
         self.agents = os.path.join(self.root, ".agents")
         self.plugins_cache = plugins_cache or os.path.join(self.agents, "plugins_cache")
         self.skills_cache = skills_cache or os.path.join(self.agents, "skills_cache")
+        self.superpowers_cache = os.path.join(self.agents, "superpowers_cache")
         self.receipt = os.path.join(self.agents, RECEIPT_NAME)
         self.hooks = os.path.join(self.agents, "hooks.json")
         self.mcp = os.path.join(self.agents, "mcp_config.json")
@@ -108,7 +109,9 @@ def validate_selection(sel):
     plugins = sel.get("plugins", [])
     if not isinstance(plugins, list) or not all(isinstance(p, str) for p in plugins):
         raise ProvisionError("plugins must be a list of strings")
-    sel.setdefault("sdd", False)
+    if not isinstance(sel.get("superpowers", False), bool):
+        raise ProvisionError("superpowers must be a boolean")
+    sel.setdefault("superpowers", False)
 
 
 def load_receipt(path):
@@ -333,12 +336,59 @@ def ensure_gitignore_cache_block(paths):
                 + GITIGNORE_MARKER + "\n" + "\n".join(CACHE_IGNORES) + "\n")
 
 
-def build_receipt(sel, entries, collisions):
+def apply_superpowers(paths, active, prior_entry):
+    """Activate/deactivate the vendored obra/superpowers methodology (all-or-nothing).
+    Active: copy every superpowers_cache/skills/* -> .agents/skills/*, and
+    superpowers_cache/bootstrap-rule.md -> .agents/rules/superpowers.md (always-on, loads
+    interactive AND headless). Deactivate: remove everything it created (from the prior receipt).
+    Returns the receipt entry {"active": bool, "createdPaths": [sorted]}."""
+    def _rm(rel):
+        t = paths.abs(rel)
+        if os.path.isdir(t) and not os.path.islink(t):
+            shutil.rmtree(t, ignore_errors=True)
+        elif os.path.lexists(t):
+            try:
+                os.remove(t)
+            except OSError:
+                pass
+
+    prior_paths = (prior_entry or {}).get("createdPaths", [])
+    if not active:
+        for rel in sorted(prior_paths, key=len, reverse=True):
+            _rm(rel)
+        return {"active": False, "createdPaths": []}
+
+    sp_skills = os.path.join(paths.superpowers_cache, "skills")
+    if not os.path.isdir(sp_skills):
+        raise ProvisionError(f"superpowers requested but cache missing at {sp_skills}")
+    created = []
+    skills_dir = os.path.join(paths.agents, "skills")
+    os.makedirs(skills_dir, exist_ok=True)
+    for name in sorted(os.listdir(sp_skills)):
+        src = os.path.join(sp_skills, name)
+        if not os.path.isdir(src):
+            continue
+        _copytree_clean(src, os.path.join(skills_dir, name))
+        chmod_scripts(os.path.join(skills_dir, name))
+        created.append(f".agents/skills/{name}")
+    boot = os.path.join(paths.superpowers_cache, "bootstrap-rule.md")
+    if os.path.isfile(boot):
+        os.makedirs(os.path.join(paths.agents, "rules"), exist_ok=True)
+        shutil.copy2(boot, os.path.join(paths.agents, "rules", "superpowers.md"))
+        created.append(".agents/rules/superpowers.md")
+    # drop any prior artifacts no longer produced (e.g. a skill removed upstream)
+    for rel in prior_paths:
+        if rel not in created:
+            _rm(rel)
+    return {"active": True, "createdPaths": sorted(created)}
+
+
+def build_receipt(sel, entries, collisions, superpowers):
     core = {
         "schemaVersion": SCHEMA_VERSION,
         "mode": sel["mode"],
-        "sdd": sel.get("sdd", False),
-        "selection": {k: sel[k] for k in ("schemaVersion", "mode", "plugins", "sdd")},
+        "superpowers": superpowers,
+        "selection": {k: sel[k] for k in ("schemaVersion", "mode", "plugins", "superpowers")},
         "plugins": entries,
         "collisions": collisions,
     }
@@ -415,15 +465,17 @@ def provision(selection_path, workspace, plugins_cache, skills_cache, dry_run=Fa
         entries[name] = entry
         collisions.extend(coll)
 
-    # 3) gitignore caches + 4) receipt
-    # NOTE: SDD is NOT enforced via .agents/settings.json — Antigravity does not honor
-    # workspace agentMode at runtime. SDD = the sdd.md rule + launching `agy --mode=plan`
-    # (surfaced in the Phase-5 handoff). The receipt just records that sdd was requested.
+    # 3) gitignore caches + superpowers methodology + 4) receipt
     ensure_gitignore_cache_block(paths)
-    receipt = build_receipt(sel, entries, sorted(collisions, key=lambda c: (c["plugin"], c["kind"], c["name"])))
+    sp_entry = apply_superpowers(paths, sel.get("superpowers", False),
+                                 (prior or {}).get("superpowers"))
+    receipt = build_receipt(sel, entries,
+                            sorted(collisions, key=lambda c: (c["plugin"], c["kind"], c["name"])),
+                            sp_entry)
     changed = write_receipt(paths.receipt, receipt)
     _log(f"[dhc-provision] {'wrote' if changed else 'no change to'} {RECEIPT_NAME} "
-         f"(mode={sel['mode']}, plugins={len(entries)}, collisions={len(collisions)})", quiet)
+         f"(mode={sel['mode']}, plugins={len(entries)}, superpowers={sp_entry['active']}, "
+         f"collisions={len(collisions)})", quiet)
     return 0
 
 

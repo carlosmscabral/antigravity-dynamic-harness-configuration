@@ -14,7 +14,7 @@ set -e
 # fetched at this single tag so a promoted plugin and the skills it references
 # are always mutually consistent.
 CABRAL_SKILLS_REPO="carlosmscabral/cabral-skills"
-CABRAL_SKILLS_TAG="v1.2.5"
+CABRAL_SKILLS_TAG="v1.3.0"
 
 # ── Banners and Colors ───────────────────────────────────────────────────────
 RED='\033[91m'
@@ -83,10 +83,12 @@ echo -e "[DHC] Provisioning local workspace structures..."
 rm -rf .agents/agents/harness-configurator
 rm -rf .agents/plugins_cache
 rm -rf .agents/skills_cache
+rm -rf .agents/superpowers_cache
 
 mkdir -p .agents/agents
 mkdir -p .agents/plugins_cache
 mkdir -p .agents/skills_cache
+mkdir -p .agents/superpowers_cache
 
 # Clean up any legacy, flat harness-configurator.md file from previous versions
 rm -f .agents/agents/harness-configurator.md
@@ -108,6 +110,11 @@ if [ -d "$SKILLS_EXTRACT/skills" ]; then
     cp -R "$SKILLS_EXTRACT/skills/". .agents/skills_cache/
 fi
 
+echo -e "[DHC] Staging vendored superpowers methodology into local cache..."
+if [ -d "$SKILLS_EXTRACT/vendored/superpowers" ]; then
+    cp -R "$SKILLS_EXTRACT/vendored/superpowers/". .agents/superpowers_cache/
+fi
+
 # Make any scripts inside the harness, cached plugins, and cached skills executable
 echo -e "[DHC] Enforcing execution permissions on scripts..."
 find .agents/ -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
@@ -124,6 +131,7 @@ if ! grep -qsF ".agents/plugins_cache/" .gitignore 2>/dev/null; then
         echo "# DHC build-time caches (offline install source; do not commit)"
         echo ".agents/plugins_cache/"
         echo ".agents/skills_cache/"
+        echo ".agents/superpowers_cache/"
     } >> .gitignore
 fi
 
