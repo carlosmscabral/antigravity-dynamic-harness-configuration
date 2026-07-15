@@ -13,8 +13,11 @@ Bootstrap, configure, and code inside any target workspace in three simple comma
 ### 1. Bootstrap the Workspace
 Inside the root of the target project folder you want to configure, run the dynamic installer:
 ```bash
-curl -fsSL https://raw.githubusercontent.com/carlosmscabral/antigravity-dynamic-harness-configuration/main/install.sh | bash
+curl -fsSL -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/carlosmscabral/antigravity-dynamic-harness-configuration/main/install.sh | bash
 ```
+> [!TIP]
+> The `-H 'Cache-Control: no-cache'` header avoids `raw.githubusercontent.com` edge-caching an older `install.sh` right after a release (so you always get the latest pinned content tag). Plain `curl -fsSL … | bash` also works once the CDN cache expires.
+
 > [!NOTE]
 > For offline/air-gapped banking environments, clone **both** this repo and [cabral-skills](https://github.com/carlosmscabral/cabral-skills) side by side, then run the local installer:
 > `python3 /path/to/antigravity-dynamic-harness-configuration/bootstrap.py`

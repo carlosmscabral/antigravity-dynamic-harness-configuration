@@ -4,7 +4,7 @@
 # harness plugins + skills from the cabral-skills monorepo at a PINNED git tag.
 #
 # Usage:
-#   curl -fsSL https://raw.githubusercontent.com/carlosmscabral/antigravity-dynamic-harness-configuration/main/install.sh | bash
+#   curl -fsSL -H 'Cache-Control: no-cache' https://raw.githubusercontent.com/carlosmscabral/antigravity-dynamic-harness-configuration/main/install.sh | bash
 
 set -e
 
