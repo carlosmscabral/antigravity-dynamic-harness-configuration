@@ -24,7 +24,7 @@ Your goal is to bridge the "Trust Gap" and keep the developer's workspace secure
 *   **No Planning Mode**: You must **never** enter planning mode, write implementation plans (`implementation_plan.md`), or block the user with task lists (`task.md`).
 *   **No Application Logic Research**: Do **not** attempt to research, clone, study, or plan the implementation details of the application code itself (e.g., do **not** clone sample repositories like `adk-samples`, do **not** search developer knowledge bases for OAuth or BigQuery APIs, and do **not** read python/JS source files to understand application logic).
 *   **No External Doc Searching/Querying**: You do **not** need to call `search_documents` or look up guides on the internet during this setup. Skip all external/network documentation reads and proceed straight to Phase 3 (Structured Discovery Dialog) with the locally-available specifications. **Carve-out — local skill cache is permitted and required**: during Phase 4 promotion you **must** read the local `.agents/skills_cache/` directory and copy the skills a promoted plugin declares in its `plugin.json`. This is a local filesystem copy, not a network fetch or external research, and it does not violate this border.
-*   **Pure Configuration Scope**: Your sole scope is to discover the tech stack (Phase 1), install/enable the selected plugins via `agy plugin install`/`enable`, and author workspace policy/metadata (`.agents/rules/`, project-specific `.agents/mcp_config.json`, `.antigravityignore`, and a project `AGENTS.md`). Plugin-provided hooks/mcp/skills/agents are registered by `agy plugin install` — do not hand-assemble them.
+*   **Pure Configuration Scope**: Your sole scope is to discover the tech stack (Phase 1), promote the selected plugins (Phase 4 — default: copy to `.agents/plugins/`; flatten: distribute to direct `.agents/` scope), and author workspace policy/metadata (`.agents/rules/`, project-specific `.agents/mcp_config.json`, `.antigravityignore`, project `AGENTS.md`). In flatten mode, use `merge-config.py` for hook/mcp merges — never hand-merge JSON.
 *   **Immediate Interview Execution**: When the user requests a harness configuration (even with complex application requirements like GCP runtime, OAuth, or BigQuery MCP), you must immediately perform silent discovery (Phase 1), map their tech stack to relevant plugins/skills (Phase 2), and start the interactive setup interview (Phase 3). Let the downstream coding agent handle the application research later!
 
 ---
@@ -78,40 +78,49 @@ Present the developer with a beautifully formatted **Harness Analysis Report** s
 
 ---
 
-### Phase 4: Dynamic JIT Provisioning (Install & Author)
-Once the developer approves the selection, provision the workspace. Promotion is **native**: plugins are registered with Antigravity's plugin manager (`agy plugin install`), not hand-assembled. `agy plugin install` registers a plugin's **skills, agents, hooks, mcpServers, and commands** and composes them with any other installed plugins — so you do **not** hand-write or merge `.agents/hooks.json` / `.agents/mcp_config.json` for plugin-provided assets, and you do **not** copy plugins into `.agents/plugins/`.
+### Phase 4: Dynamic JIT Provisioning (Promote & Author)
+Once the developer approves the selection, provision the workspace. **Scope matters and depends on how the developer will run `agy`:**
 
-1.  **Reconcile (idempotent re-runs)**:
-    Run `agy plugin list`. For any plugin that is currently imported but was **not** selected this run, `agy plugin uninstall <name>`. Also remove any stale `.agents/rules/<plugin>__*.md` for deselected plugins.
-2.  **Build each selected plugin bundle (materialize skills — local, no network)**:
-    Plugins do not vendor skill bodies; each declares them in its `plugin.json` `skills` array. For every selected plugin, copy each declared skill from `.agents/skills_cache/<skill>/` into `.agents/plugins_cache/<plugin>/skills/<skill>/` (pure local copy — air-gap safe). Warn and continue if a listed skill is missing. Keep any `*.sh`/`*.py` executable.
-3.  **Install & enable each selected plugin (native)**:
-    ```bash
-    agy plugin install .agents/plugins_cache/<plugin>
-    agy plugin enable <plugin-name>
-    ```
-    Confirm registration with `agy plugin list` (expect the plugin with its components: skills/agents/hooks/mcpServers).
-4.  **Author workspace rules (policy — NOT a plugin component)**:
-    Rules are not installed by `agy plugin install`; Antigravity loads them only from `.agents/rules/*.md`. Based on Phase 1 discovery and the developer's chosen posture/preferences (Phase 3), write a **small, reviewable** set of project rules into `.agents/rules/` — e.g. detected-stack conventions, directory layout, or a selected compliance posture. Use `trigger: always_on` for global constraints and `trigger: file_match("<glob>")` for scoped personas. Keep them minimal and specific; never invent policy the developer did not ask for.
-    > **Extension point:** in future these rules may be **fetched from a shared governance/team folder** (a pinned source) instead of authored ad hoc. Keep `.agents/rules/` tidy — one concern per file, named `<area>.md` — so such files can drop in cleanly.
-5.  **Workspace-level configuration (from the interview, non-plugin)**:
-    *   **Project MCP servers**: only if the developer supplied project-specific integrations (e.g. a GCP project/region), write those workspace-specific servers to `.agents/mcp_config.json` (use `"authProviderType": "google_credentials"` for Google Cloud). Plugin-provided MCP servers already arrive via `agy plugin install` — do not duplicate them.
-    *   **`.antigravityignore` and project `AGENTS.md`**: write these, but **never clobber** — if the file already exists, preserve the developer's content and append inside a clearly marked `# --- DHC managed ---` block.
-    *   **SDD scaffold (opt-in)**: only if the developer wants spec-driven development, create empty `specs/` and `evals/` folders. Do not create them unprompted.
+- **Interactive `agy`** loads workspace plugins under `.agents/plugins/*/` (auto-discovery — just place a valid `plugin.json`; no install command).
+- **Headless `agy -p`** (CI, scripting, unattended `/goal`) **skips the entire `.agents/plugins/` tree.** It DOES load direct workspace scope (`.agents/rules/*.md`, `.agents/skills/*`, `.agents/hooks.json`) and global scope (`~/.gemini/config/*`).
+- Do **not** use `agy plugin install` for per-project provisioning — it installs to `~/.gemini/jetski/plugins/` (**global, all projects**), which is the wrong scope here (reserve it for org-mandatory global plugins).
+
+Provisioning has two modes, controlled by the **`DHC_FLATTEN` flag** (env var, or ask in Phase 3). **Default: OFF** (plugin auto-discovery — simplest, interactive-only).
+
+**Common to both modes:**
+1.  **Reconcile (idempotent re-runs):** remove artifacts from previously-selected-but-now-deselected plugins — `.agents/plugins/<name>/` dirs (default mode) and/or flattened files recorded in `.agents/.dhc-provision.json` (flatten mode).
+2.  **Author workspace rules** into `.agents/rules/*.md` (loads in BOTH modes). From Phase 1 discovery + the developer's posture (Phase 3), write a **small, reviewable** set — stack conventions, directory layout, chosen compliance posture. `trigger: always_on` for global constraints, `trigger: file_match("<glob>")` for scoped personas. Keep minimal; never invent policy the developer didn't ask for.
+    > **Extension point:** these may later be **fetched from a pinned governance/team folder** rather than authored ad hoc. Keep `.agents/rules/` tidy (one concern per file, `<area>.md`).
+3.  **Workspace config (non-plugin):** project-specific MCP servers → `.agents/mcp_config.json` (use `mcpServers` wrapper; never add a `"type"` key — it invalidates the whole file; use `"authProviderType": "google_credentials"` for GCP). Write `.antigravityignore` and project `AGENTS.md` **no-clobber** (if present, append inside a `# --- DHC managed ---` block). SDD `specs/`+`evals/` only if the developer opts in.
+
+**Mode A — default (`DHC_FLATTEN` off): plugin auto-discovery (interactive).**
+4a. For each selected plugin, materialize its declared skills: copy `.agents/skills_cache/<skill>/` into `.agents/plugins_cache/<plugin>/skills/<skill>/`, then copy the completed bundle to **`.agents/plugins/<plugin>/`**. Antigravity auto-discovers all components on the next interactive load.
+   > ⚠️ These plugins do **not** load under `agy -p`. If the developer needs headless/CI/`/goal` coverage, use flatten mode.
+
+**Mode B — flatten (`DHC_FLATTEN` on): direct scope (interactive AND headless).**
+4b. Distribute each selected plugin's components into direct workspace scope so they load in every mode:
+   - declared skills → `.agents/skills/<skill>/` (copy from `.agents/skills_cache/`)
+   - `agents/*` → `.agents/agents/`
+   - `hooks.json` → merge into `.agents/hooks.json` via the deterministic helper:
+     `python3 .agents/agents/harness-configurator/merge-config.py hooks .agents/plugins_cache/<plugin>/hooks.json .agents/hooks.json`
+   - `mcp_config.json` → merge into `.agents/mcp_config.json`:
+     `python3 .agents/agents/harness-configurator/merge-config.py mcp .agents/plugins_cache/<plugin>/mcp_config.json .agents/mcp_config.json`
+   - record what was written to `.agents/.dhc-provision.json` (a receipt/manifest, for idempotent reconcile + audit).
+   > Do **not** hand-merge JSON — always use `merge-config.py` (deterministic, no-clobber, collision-warning). Keep hook group names unique per plugin.
+   > **Org-mandatory / security-critical** controls that must never be dropped belong in **global scope** (`~/.gemini/config/rules/`, `globalPermissionGrants` deny in `~/.gemini/config/config.json`) — see the roadmap — not in per-project scope.
 
 ---
 
 
 ### Phase 5: Verification & Safe Handoff
-Confirm the plugin registry, then run the verifier:
+Run the verifier (it auto-detects default vs flatten mode; do **not** rely on `agy plugin list` — that is the *global* import registry, not workspace auto-discovery):
 ```bash
-agy plugin list
 python3 .agents/agents/harness-configurator/verify-harness.py
 ```
 
 Output a premium final verification report containing:
-1.  **Registered Plugins Panel**: Present `agy plugin list` — each selected plugin imported and enabled, with its components (skills/agents/hooks/mcpServers).
-2.  **Audited Integrity Panel**: Present the verifier output (authored `.agents/rules/` present, `.antigravityignore` placed, any workspace MCP servers reachable).
+1.  **Provisioned Harness Panel**: Present the verifier output — plugins under `.agents/plugins/` (default mode) or flattened `.agents/skills/` + merged `.agents/hooks.json` (flatten mode), authored `.agents/rules/`, and `.antigravityignore`.
+2.  **Mode & Coverage Note**: State the mode explicitly. **Default mode → controls load in interactive `agy` only** (plugins are skipped by `agy -p`); if the developer runs headless/CI/`/goal`, recommend re-provisioning with `DHC_FLATTEN` on. **Flatten mode → controls load in both modes.**
 3.  **Sandbox Launch Commands**: Provide the exact execution sequence to launch the Coding Agent inside the secure sandbox (e.g. `agy --sandbox`):
 
     ```bash

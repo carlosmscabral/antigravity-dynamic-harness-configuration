@@ -11,7 +11,6 @@ import os
 import sys
 import json
 import shutil
-import subprocess
 
 GREEN = "\033[92m"
 RED = "\033[91m"
@@ -51,31 +50,39 @@ def verify_harness():
     errors_count = 0
 
     # ---------------------------------------------------------
-    # 1. Registered plugins (agy plugin install)
+    # 1. Provisioned harness — mode-aware (default plugins vs flattened)
+    #    NOTE: `agy plugin list` is the GLOBAL import registry, not workspace
+    #    auto-discovery, so it is NOT used here.
     # ---------------------------------------------------------
-    print(f"{BOLD}[1/5] Verifying Registered Plugins (agy plugin list)...{RESET}")
-    agy = shutil.which("agy")
-    if not agy:
-        print(f"  {YELLOW}[-] 'agy' not found in $PATH — skipping plugin registry check.{RESET}")
+    print(f"{BOLD}[1/5] Verifying Provisioned Harness (mode-aware)...{RESET}")
+    plugins_dir = os.path.join(agents_dir, "plugins")
+    flat_skills_dir = os.path.join(agents_dir, "skills")
+    receipt = os.path.join(agents_dir, ".dhc-provision.json")
+    plugin_dirs = (
+        [d for d in os.listdir(plugins_dir)
+         if os.path.isfile(os.path.join(plugins_dir, d, "plugin.json"))]
+        if os.path.isdir(plugins_dir) else []
+    )
+    flat_skills = (
+        [d for d in os.listdir(flat_skills_dir)
+         if os.path.isfile(os.path.join(flat_skills_dir, d, "SKILL.md"))]
+        if os.path.isdir(flat_skills_dir) else []
+    )
+    if os.path.exists(receipt) or (flat_skills and not plugin_dirs):
+        print(f"  {GREEN}[✓]{RESET} Mode: FLATTEN (direct scope — loads interactive AND headless `agy -p`)")
+        print(f"  {GREEN}[✓]{RESET} Flattened skills in .agents/skills/: {len(flat_skills)}")
+        for s in sorted(flat_skills):
+            print(f"        - {s}")
+    elif plugin_dirs:
+        print(f"  {GREEN}[✓]{RESET} Mode: DEFAULT (plugin auto-discovery under .agents/plugins/)")
+        for p in sorted(plugin_dirs):
+            print(f"        - {p}")
+        print(f"  {YELLOW}[⚠️] These load in interactive `agy` only — `agy -p` (CI/headless/goal) skips them.{RESET}")
+        print(f"      For headless coverage, re-provision with DHC_FLATTEN enabled.")
         warnings_count += 1
     else:
-        try:
-            out = subprocess.run([agy, "plugin", "list"], capture_output=True, text=True, timeout=30)
-            imports = []
-            try:
-                imports = (json.loads(out.stdout or "{}") or {}).get("imports", [])
-            except json.JSONDecodeError:
-                pass
-            if imports:
-                for p in imports:
-                    comps = ", ".join(p.get("components", [])) or "no components"
-                    print(f"  {GREEN}[✓]{RESET} Plugin: {p.get('name','?'):<28} [{comps}]")
-            else:
-                print(f"  {YELLOW}[⚠️] No imported plugins. If you selected plugins, run `agy plugin install` for each.{RESET}")
-                warnings_count += 1
-        except Exception as e:
-            print(f"  {YELLOW}[⚠️] Could not query plugin registry: {e}{RESET}")
-            warnings_count += 1
+        print(f"  {YELLOW}[⚠️] No provisioned plugins found (neither .agents/plugins/ nor flattened .agents/skills/).{RESET}")
+        warnings_count += 1
     print()
 
     # ---------------------------------------------------------
@@ -146,7 +153,7 @@ def verify_harness():
             print(f"  {RED}[✗] Failed to parse hooks.json: {str(e)}{RESET}")
             errors_count += 1
     else:
-        print(f"  {YELLOW}[-] No workspace .agents/hooks.json (plugin hooks are registered via agy plugin install).{RESET}")
+        print(f"  {YELLOW}[-] No workspace .agents/hooks.json (default mode: plugin hooks load from .agents/plugins/; flatten mode merges them here).{RESET}")
     print()
 
     # ---------------------------------------------------------
@@ -177,7 +184,7 @@ def verify_harness():
             print(f"  {RED}[✗] Failed to parse mcp_config.json: {str(e)}{RESET}")
             errors_count += 1
     else:
-        print(f"  {YELLOW}[-] No workspace .agents/mcp_config.json (plugin MCP servers are registered via agy plugin install).{RESET}")
+        print(f"  {YELLOW}[-] No workspace .agents/mcp_config.json (default mode: plugin MCP loads from .agents/plugins/; flatten mode merges them here).{RESET}")
 
     # ---------------------------------------------------------
     # Verdict

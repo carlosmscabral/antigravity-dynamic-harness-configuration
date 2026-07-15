@@ -27,6 +27,23 @@ governed, and verifiable. **Phase 2** turns it into distributed, enterprise harn
    `.agents/rules/` — do not reinvent what Antigravity already provides.
 6. **DHC stays thin.** Content lives in the source repo(s); the DHC orchestrates and verifies.
 
+## Scope × mode (hard design constraint, from the loader)
+
+Antigravity loads customizations differently by run mode — this dictates *where* provisioning must write:
+
+| Location | Interactive `agy` | Headless `agy -p` (CI, scripting, `/goal`) |
+|---|---|---|
+| `.agents/plugins/*/` (auto-discovery) | ✅ loads | ❌ **skipped** |
+| `.agents/rules/*.md`, `.agents/skills/*`, `.agents/hooks.json` (direct) | ✅ | ✅ |
+| `~/.gemini/config/*` (global rules/skills/mcp) | ✅ | ✅ |
+
+Implication: **plugin-scoped provisioning is interactive-only; guardrails that must survive headless
+runs belong in direct workspace scope or global scope.** The DHC exposes this as the **`DHC_FLATTEN`**
+flag — default OFF (copy to `.agents/plugins/`, simplest, interactive); ON flattens into direct
+`.agents/` scope (loads in both modes). Org-mandatory controls go **global** (§2.2). *`agy plugin install`
+is NOT used for per-project provisioning — it installs to `~/.gemini/jetski/plugins/` (global, all
+projects).*
+
 ---
 
 ## Phase 1 — Harden the foundation
@@ -34,13 +51,15 @@ governed, and verifiable. **Phase 2** turns it into distributed, enterprise harn
 Goal: make the existing single-source flow **deterministic, governed, verifiable, and generic**.
 
 ### 1.1 Deterministic provisioning core
-- **Problem:** promotion steps (`cp`, `agy plugin install`, `enable`, cache gitignore) are
-  hand-run by the LLM — non-auditable and drift-prone.
-- **Deliverable:** a provisioning CLI (e.g. `dhc-provision <selection.json>`) that performs the
-  mechanical work deterministically — reconcile (uninstall deselected), materialize skills,
-  `agy plugin install` + `enable`, gitignore caches, emit a receipt. The configurator agent
-  computes a *selection* (discovery + interview) and calls the CLI; it no longer improvises
-  shell for security-relevant steps.
+- **Problem:** promotion steps (`cp`, JSON merges, cache gitignore) hand-run by the LLM —
+  non-auditable and drift-prone.
+- **Started:** `merge-config.py` now performs the fragile flatten-mode hook/mcp merges
+  deterministically (idempotent, no-clobber, collision-warned) — the LLM no longer hand-merges
+  JSON. The `DHC_FLATTEN` flag + a `.agents/.dhc-provision.json` receipt are in place.
+- **Deliverable (remaining):** fold the rest of promotion into a single `dhc-provision
+  <selection.json>` CLI — reconcile (remove deselected), materialize skills, copy-or-flatten,
+  gitignore caches, write the receipt. The configurator computes a *selection* (discovery +
+  interview) and calls it; no agent-authored shell in the mechanical path.
 - **Done when:** identical selection → identical result + a provisioning receipt; no
   agent-authored shell in the mechanical path.
 
