@@ -96,6 +96,13 @@ To ensure this operational customization repository never suffers from stale doc
 
 ---
 
+## 🗺️ Roadmap
+
+The DHC today is a proven skeleton. [`ROADMAP.md`](ROADMAP.md) tracks the hardening plan:
+**Phase 1** — make provisioning deterministic, rules governed, and verification efficacy-based;
+**Phase 2** — enterprise distributed harness management from one company source of truth
+(mandatory global controls + team defaults + project opt-in, pinned/signed/audited).
+
 ## 👥 Contributions & Governance
 
 This suite is maintained by **Carlos Cabral** and agentic architects. Pull requests are welcomed to expand the plugin library (e.g., adding a `disposable-code-harness` or stack-specific templates).
