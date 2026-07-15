@@ -113,6 +113,20 @@ echo -e "[DHC] Enforcing execution permissions on scripts..."
 find .agents/ -name "*.sh" -exec chmod +x {} + 2>/dev/null || true
 find .agents/ -name "*.py" -exec chmod +x {} + 2>/dev/null || true
 
+# Keep the build-time caches out of git. They are the offline install source for
+# future reconfiguration (kept on purpose, esp. for air-gapped setups), but must
+# never be committed into the developer's repo. Append idempotently — only the
+# caches, not the rest of .agents/ (rules/mcp/AGENTS.md may be worth committing).
+echo -e "[DHC] Ensuring build-time caches are git-ignored..."
+if ! grep -qsF ".agents/plugins_cache/" .gitignore 2>/dev/null; then
+    {
+        echo ""
+        echo "# DHC build-time caches (offline install source; do not commit)"
+        echo ".agents/plugins_cache/"
+        echo ".agents/skills_cache/"
+    } >> .gitignore
+fi
+
 # ── Cleanup (preserve plugins_cache/ + skills_cache/) ────────────────────────
 echo -e "[DHC] Cleaning up temporary download caches..."
 rm -f "$DHC_ZIP" "$SKILLS_ZIP"

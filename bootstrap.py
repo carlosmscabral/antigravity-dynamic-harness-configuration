@@ -134,6 +134,18 @@ def bootstrap():
 
     _stage(cabral_skills_dir / "plugins", target_plugins_dir, "plugins")
     _stage(cabral_skills_dir / "skills", target_skills_dir, "skills")
+
+    # Keep the build-time caches out of git (they are the offline install source
+    # for reconfiguration, kept on purpose, but must never be committed).
+    gitignore = target_dir / ".gitignore"
+    existing = gitignore.read_text() if gitignore.exists() else ""
+    if ".agents/plugins_cache/" not in existing:
+        with open(gitignore, "a") as f:
+            f.write(
+                "\n# DHC build-time caches (offline install source; do not commit)\n"
+                ".agents/plugins_cache/\n.agents/skills_cache/\n"
+            )
+        print(f"{GREEN}[DHC] Added .agents/*_cache/ to .gitignore.{RESET}")
         
     print(f"\n{GREEN}{BOLD}===================================================================={RESET}")
     print(f"{GREEN}{BOLD}🎉 BOOTSTRAP COMPLETE! The Harness Configurator is ready to run.{RESET}")
